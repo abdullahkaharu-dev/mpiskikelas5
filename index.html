@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPI SKI - Perjuangan Nabi Muhammad SAW</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HTML2PDF for Report Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        arabic: ['Amiri', 'serif'],
+                    },
+                    colors: {
+                        islamic: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                        'marquee': 'marquee 15s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        marquee: {
+                            '0%': { transform: 'translateX(100vw)' },
+                            '100%': { transform: 'translateX(-100%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #16a34a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #15803d; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .screen-container { display: none; min-height: 100vh; }
+        .screen-container.active { display: flex; flex-direction: column; }
+        
+        /* Interactive items for tap-to-move (mobile friendly D&D alternative) */
+        .tap-item { cursor: pointer; transition: all 0.2s; }
+        .tap-item.selected { border: 2px solid #eab308; transform: scale(1.05); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .drop-zone { border: 2px dashed #cbd5e1; min-height: 60px; transition: all 0.2s; }
+        .drop-zone.active { border-color: #22c55e; background-color: #f0fdf4; }
+
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; }
+            .glass-panel { background: white; border: none; box-shadow: none; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased overflow-x-hidden selection:bg-islamic-500 selection:text-white">
+
+    <!-- ==================== UI COMPONENTS: CUSTOM ALERTS & MODALS ==================== -->
+    <div id="customAlert" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full transform scale-95 transition-transform duration-300" id="customAlertBox">
+            <div class="text-center">
+                <div id="alertIcon" class="text-4xl mb-4 text-gold-500"><i class="fas fa-exclamation-circle"></i></div>
+                <h3 id="alertTitle" class="text-xl font-bold text-slate-800 mb-2">Perhatian</h3>
+                <p id="alertMessage" class="text-slate-600 mb-6 text-sm">Pesan muncul di sini.</p>
+                <button onclick="closeAlert()" class="w-full bg-islamic-600 hover:bg-islamic-700 text-white font-semibold py-2 px-4 rounded-xl transition shadow-lg shadow-islamic-600/30">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Floating Developer Info -->
+    <div id="devModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-3xl p-8 max-w-md w-full relative animate-slide-up shadow-2xl border-t border-white">
+            <button onclick="closeModal('devModal')" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition"><i class="fas fa-times text-xl"></i></button>
+            <div class="text-center">
+                <h2 class="text-2xl font-bold text-islamic-900 mb-6 uppercase tracking-wider text-sm border-b pb-2">Informasi Pengembang</h2>
+                <div class="relative w-32 h-32 mx-auto mb-4 rounded-full p-1 bg-gradient-to-tr from-islamic-500 to-gold-400 shadow-lg">
+                    <img src="https://freeimage.host/i/oFbrvHJ" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Abdullah+Kaharu&background=16a34a&color=fff&size=128';" alt="Foto Pengembang" class="w-full h-full object-cover rounded-full border-4 border-white">
+                </div>
+                <h3 class="text-xl font-bold text-slate-800">Abdullah S. Kaharu, S.Pd</h3>
+                <p class="text-islamic-600 font-medium mb-1"><i class="fas fa-school mr-2"></i>MIS Al-Awwaliyah Karyamukti</p>
+                <p class="text-slate-500 text-sm mb-6"><i class="fas fa-envelope mr-2"></i>abdullah.kaharu@gmail.com</p>
+                <div class="bg-islamic-50 p-4 rounded-xl text-sm text-islamic-800 text-left border border-islamic-100 mb-6">
+                    "Mengembangkan media yang memadukan keindahan alam Karyamukti dengan nilai historis perjuangan Rasulullah untuk menanamkan literasi dan karakter Islami."
+                </div>
+                <button onclick="closeModal('devModal')" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-6 rounded-full transition w-full">Kembali ke Cover</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Floating Objectives -->
+    <div id="objModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-3xl p-6 md:p-8 max-w-lg w-full relative animate-slide-up shadow-2xl border-t border-white max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('objModal')" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold text-islamic-900 mb-4 border-b-2 border-gold-400 pb-2 inline-block">Tujuan Pembelajaran</h2>
+            
+            <div class="bg-gradient-to-r from-islamic-50 to-white p-4 rounded-xl mb-4 border-l-4 border-islamic-500 shadow-sm">
+                <p class="text-slate-700 font-medium text-lg"><i class="fas fa-bullseye text-islamic-500 mr-2"></i>Peserta didik mampu menganalisis Perjuangan Nabi Muhammad SAW periode Makkah dan Hijrah ke Madinah.</p>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="font-bold text-slate-700 mb-2 text-sm uppercase tracking-wide"><i class="fas fa-quran text-gold-500 mr-2"></i>Landasan Al-Qur'an</h3>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="font-arabic text-right text-2xl mb-2 text-slate-800 leading-loose">إِلَّا تَنصُرُوهُ فَقَدْ نَصَرَهُ ٱللَّهُ إِذْ أَخْرَجَهُ ٱلَّذِينَ كَفَرُوا۟ ثَانِىَ ٱثْنَيْنِ إِذْ هُمَا فِى ٱلْغَارِ</p>
+                    <p class="text-xs text-slate-500 mb-1">Q.S. At-Taubah: 40</p>
+                    <p class="text-sm text-slate-600 italic">"Jikalau kamu tidak menolongnya (Muhammad) maka sesungguhnya Allah telah menolongnya (yaitu) ketika orang-orang kafir (musyrikin Mekah) mengeluarkannya (dari Mekah) sedang dia salah seorang dari dua orang ketika keduanya berada dalam gua..."</p>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="font-bold text-slate-700 mb-2 text-sm uppercase tracking-wide"><i class="fas fa-heart text-rose-500 mr-2"></i>Kurikulum Berbasis Cinta (KBC)</h3>
+                <ul class="text-sm text-slate-600 space-y-2">
+                    <li><i class="fas fa-check-circle text-islamic-500 mr-2"></i><b>Cinta Allah & Rasul:</b> Meneladani keteguhan iman dan pengorbanan saat Hijrah.</li>
+                    <li><i class="fas fa-check-circle text-islamic-500 mr-2"></i><b>Cinta Sesama:</b> Belajar dari persaudaraan Muhajirin dan Ansar.</li>
+                    <li><i class="fas fa-check-circle text-islamic-500 mr-2"></i><b>Cinta Alam & Tanah Air:</b> Menjaga kelestarian lingkungan layaknya hijaunya Desa Karyamukti, dan mencintai tanah air tempat kita berpijak.</li>
+                </ul>
+            </div>
+
+            <button onclick="closeModal('objModal')" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-6 rounded-full transition w-full">Kembali ke Cover</button>
+        </div>
+    </div>
+
+
+    <!-- ==================== 1. SPLASH SCREEN ==================== -->
+    <div id="screen-splash" class="screen-container active bg-islamic-700 items-center justify-center relative overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+        
+        <div class="text-center z-10 animate-fade-in flex flex-col items-center">
+            <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl shadow-gold-500/50 mb-6 animate-float">
+                <i class="fas fa-mosque text-5xl text-islamic-600"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">MPI SKI</h1>
+            <p class="text-gold-400 text-lg font-medium tracking-widest uppercase">Madrasah Ibtidaiyah</p>
+            <div class="mt-8 flex space-x-2 justify-center">
+                <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 1b. COVER SCREEN ==================== -->
+    <div id="screen-cover" class="screen-container bg-gradient-to-br from-slate-50 via-islamic-50 to-emerald-100 items-center justify-center p-4 relative pt-16">
+        
+        <!-- Running Text (Marquee) -->
+        <div class="absolute top-0 left-0 w-full bg-gradient-to-r from-islamic-700 to-islamic-500 text-white py-2.5 overflow-hidden z-50 shadow-md border-b-2 border-gold-400">
+            <div class="whitespace-nowrap animate-marquee inline-block font-bold text-sm md:text-base tracking-wide drop-shadow-md">
+                ✨ Selamat Datang di MPI Mapel SKI Kelas V MIS Al-Awwaliyah Karyamukti ✨ Belajar Sejarah Kebudayaan Islam Menjadi Lebih Menyenangkan! ✨
+            </div>
+        </div>
+
+        <!-- Decorative Elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+            <div class="absolute -top-24 -right-24 w-96 h-96 bg-islamic-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-gold-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-6 md:p-10 w-full max-w-4xl shadow-2xl relative z-10 flex flex-col md:flex-row items-center gap-8">
+            
+            <!-- Left: Visual -->
+            <div class="w-full md:w-1/2 flex justify-center order-2 md:order-1 animate-float">
+                <!-- SVG Illustration: Camel in Desert moving to Green Oasis (representing Makkah to Madinah/Karyamukti) -->
+                <svg viewBox="0 0 400 300" class="w-full max-w-sm drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8"/>
+                            <stop offset="100%" stop-color="#fde047"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="400" height="300" rx="20" fill="url(#sky)"/>
+                    <!-- Sun -->
+                    <circle cx="320" cy="80" r="40" fill="#fef08a" opacity="0.8"/>
+                    <!-- Desert Mountains (Makkah) -->
+                    <path d="M0 200 L80 120 L160 200 Z" fill="#d6d3d1"/>
+                    <path d="M100 220 L180 100 L280 220 Z" fill="#a8a29e"/>
+                    <!-- Green Oasis / Karyamukti representation -->
+                    <path d="M200 300 Q 300 200 400 300 Z" fill="#22c55e"/>
+                    <path d="M250 300 Q 320 220 400 300 Z" fill="#16a34a"/>
+                    <!-- Trees -->
+                    <path d="M300 240 L310 210 L320 240 Z" fill="#15803d"/>
+                    <rect x="308" y="240" width="4" height="10" fill="#78350f"/>
+                    <path d="M340 260 L350 230 L360 260 Z" fill="#15803d"/>
+                    <rect x="348" y="260" width="4" height="10" fill="#78350f"/>
+                    <!-- Pathway -->
+                    <path d="M0 280 Q 150 250 250 280 L200 300 Q 100 280 0 300 Z" fill="#e7e5e4"/>
+                    <!-- Minimalist Camel & Rider SVG -->
+                    <g transform="translate(120, 210) scale(0.6)">
+                        <path d="M20 40 Q 30 20 50 30 Q 60 10 70 30 Q 90 20 90 50 L80 90 L70 90 L75 55 Q 60 60 45 55 L50 90 L40 90 L35 50 Q 25 55 10 45 Z" fill="#78350f"/>
+                        <circle cx="85" cy="25" r="8" fill="#78350f"/>
+                        <circle cx="60" cy="5" r="10" fill="#ffffff"/> <!-- Turban/Rider silhouette -->
+                        <path d="M55 10 L65 10 L65 30 L55 30 Z" fill="#ffffff"/>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Right: Text & Actions -->
+            <div class="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left order-1 md:order-2">
+                <div class="bg-gold-100 text-gold-700 text-xs font-bold px-3 py-1 rounded-full mb-4 inline-flex items-center">
+                    <i class="fas fa-book-open mr-2"></i> SKI - Kelas V MI
+                </div>
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-800 leading-tight mb-4">
+                    Perjuangan Nabi Muhammad SAW
+                </h1>
+                <h2 class="text-xl md:text-2xl font-medium text-islamic-600 mb-8">
+                    Periode Makkah & Hijrah ke Madinah
+                </h2>
+                
+                <div class="flex flex-col w-full max-w-sm space-y-3">
+                    <button onclick="goTo('screen-form')" class="group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-bold rounded-2xl text-white bg-islamic-600 hover:bg-islamic-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-islamic-500 shadow-xl shadow-islamic-600/40 transition-all hover:-translate-y-1">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-4">
+                            <i class="fas fa-sign-in-alt text-islamic-300 group-hover:text-white transition ease-in-out duration-150"></i>
+                        </span>
+                        MASUK KE APLIKASI
+                    </button>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="openModal('objModal')" class="flex items-center justify-center py-3 px-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-islamic-50 hover:text-islamic-600 transition shadow-sm hover:shadow-md">
+                            <i class="fas fa-bullseye text-gold-500 mr-2"></i> Tujuan
+                        </button>
+                        <button onclick="openModal('devModal')" class="flex items-center justify-center py-3 px-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-islamic-50 hover:text-islamic-600 transition shadow-sm hover:shadow-md">
+                            <i class="fas fa-user-tie text-islamic-500 mr-2"></i> Info Pengembang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 2. FORM IDENTITAS ==================== -->
+    <div id="screen-form" class="screen-container bg-islamic-50 items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md p-8 animate-slide-up">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-islamic-100 rounded-full flex items-center justify-center mx-auto mb-4 text-islamic-600 text-2xl">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Identitas Siswa</h2>
+                <p class="text-slate-500 text-sm mt-1">Silakan isi data diri sebelum belajar.</p>
+            </div>
+
+            <form id="studentForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                <div>
+                    <label for="studentName" class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="studentName" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-islamic-500 focus:border-islamic-500 outline-none transition" placeholder="Masukkan nama kamu..." autocomplete="off">
+                </div>
+                <div>
+                    <label for="studentClass" class="block text-sm font-medium text-slate-700 mb-1">Kelas</label>
+                    <select id="studentClass" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-islamic-500 focus:border-islamic-500 outline-none transition bg-white">
+                        <option value="">Pilih Kelas...</option>
+                        <option value="V A">Kelas V A</option>
+                        <option value="V B">Kelas V B</option>
+                        <option value="V C">Kelas V C</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-islamic-600 hover:bg-islamic-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg flex items-center justify-center">
+                    Lanjut ke Panduan <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== 3. PANDUAN PENGGUNA (SLIDER) ==================== -->
+    <div id="screen-guide" class="screen-container bg-slate-800 items-center justify-center p-4 relative">
+        <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-slide-up flex flex-col h-[80vh] max-h-[600px]">
+            
+            <div class="bg-islamic-600 p-4 text-center text-white relative">
+                <h2 class="text-xl font-bold">Panduan Pengguna</h2>
+                <div class="absolute top-4 right-4 text-sm opacity-80" id="guideCounter">1 / 3</div>
+            </div>
+
+            <div class="flex-1 p-6 relative overflow-hidden flex items-center justify-center bg-slate-50">
+                <!-- Slide 1 -->
+                <div id="guide-1" class="guide-slide absolute w-full h-full px-6 flex flex-col items-center justify-center text-center transition-all duration-300 opacity-100 translate-x-0">
+                    <h3 class="text-2xl font-bold text-islamic-700 mb-4" id="welcomeText">Selamat Datang!</h3>
+                    <img src="https://ui-avatars.com/api/?name=Belajar&background=eab308&color=fff&rounded=true&size=100" class="mb-6 shadow-md rounded-full" alt="Icon">
+                    <p class="text-slate-600 text-lg">Kamu akan mempelajari sejarah agung <b>Hijrah Nabi Muhammad SAW</b>.</p>
+                    <p class="text-slate-500 mt-2">Selesaikan pembelajaran secara berurutan untuk membuka kunci tantangan berikutnya.</p>
+                </div>
+                
+                <!-- Slide 2 -->
+                <div id="guide-2" class="guide-slide absolute w-full h-full px-6 flex flex-col items-center justify-center text-center transition-all duration-300 opacity-0 translate-x-full">
+                    <h3 class="text-2xl font-bold text-islamic-700 mb-4">Sistem Terkunci 🔒</h3>
+                    <div class="flex space-x-4 mb-6">
+                        <div class="bg-white p-3 rounded-xl shadow border-2 border-islamic-500 text-islamic-600"><i class="fas fa-book-open text-2xl"></i><p class="text-xs mt-1 font-bold">Belajar</p></div>
+                        <div class="bg-slate-100 p-3 rounded-xl shadow border border-slate-200 text-slate-400"><i class="fas fa-lock text-2xl"></i><p class="text-xs mt-1">Bermain</p></div>
+                        <div class="bg-slate-100 p-3 rounded-xl shadow border border-slate-200 text-slate-400"><i class="fas fa-lock text-2xl"></i><p class="text-xs mt-1">Berlatih</p></div>
+                    </div>
+                    <p class="text-slate-600 text-lg">Menu Bermain dan Berlatih masih terkunci.</p>
+                    <p class="text-slate-500 mt-2">Selesaikan seluruh materi di menu <b>BELAJAR</b> dan jawab kuis ringannya untuk membuka menu bermain.</p>
+                </div>
+
+                <!-- Slide 3 -->
+                <div id="guide-3" class="guide-slide absolute w-full h-full px-6 flex flex-col items-center justify-center text-center transition-all duration-300 opacity-0 translate-x-full">
+                    <h3 class="text-2xl font-bold text-islamic-700 mb-4">Nilai Karakter & Lokal</h3>
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 mx-auto text-green-600 text-3xl"><i class="fas fa-leaf"></i></div>
+                    <p class="text-slate-600 text-lg">Temukan kaitan sejarah dengan nilai keislaman dan indahnya alam <b>Desa Karyamukti</b> kita tercinta.</p>
+                    <p class="text-slate-500 mt-2 text-sm italic">Siapkan dirimu untuk berpetualang!</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 border-t flex justify-between items-center">
+                <button id="btnGuidePrev" onclick="changeGuide(-1)" class="px-4 py-2 text-slate-500 font-medium invisible hover:bg-slate-100 rounded-lg transition">Sebelumnya</button>
+                <div class="flex space-x-1" id="guideDots">
+                    <div class="w-2 h-2 rounded-full bg-islamic-600"></div>
+                    <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+                    <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+                </div>
+                <button id="btnGuideNext" onclick="changeGuide(1)" class="px-4 py-2 bg-islamic-600 text-white font-medium rounded-lg hover:bg-islamic-700 transition shadow-md">Selanjutnya</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 4. MENU UTAMA ==================== -->
+    <div id="screen-menu" class="screen-container bg-slate-50 p-4 pb-20 md:p-8 relative">
+        <!-- Header Profil -->
+        <header class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm p-4 mb-8 flex justify-between items-center border border-slate-100 mt-4">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-islamic-400 to-islamic-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner mr-4" id="displayInitials">A</div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800" id="displayStudentName">Nama Siswa</h2>
+                    <p class="text-xs font-medium text-islamic-600" id="displayStudentClass">Kelas V</p>
+                </div>
+            </div>
+            <button onclick="generateReportEarly()" id="btnPreviewReport" class="hidden md:flex items-center text-sm font-semibold text-slate-500 hover:text-islamic-600 bg-slate-50 px-3 py-2 rounded-lg border">
+                <i class="fas fa-file-pdf mr-2 text-rose-500"></i> Rapor
+            </button>
+        </header>
+
+        <div class="max-w-4xl mx-auto text-center mb-10">
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">Peta Perjalanan</h1>
+            <p class="text-slate-500">Pilih menu di bawah ini. Selesaikan berurutan!</p>
+        </div>
+
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Menu 1: Belajar -->
+            <div onclick="openMenu('belajar')" class="cursor-pointer group relative bg-white rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-b-4 border-islamic-500 transform hover:-translate-y-1">
+                <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center" id="status-belajar">
+                    <i class="fas fa-unlock"></i>
+                </div>
+                <div class="w-16 h-16 bg-islamic-50 rounded-2xl flex items-center justify-center text-islamic-600 text-3xl mb-4 group-hover:scale-110 transition">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Belajar</h3>
+                <p class="text-sm text-slate-500">Pahami sejarah perjuangan dan nilai hikmahnya.</p>
+                <!-- Progress bar mini -->
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-4"><div id="prog-belajar" class="bg-islamic-500 h-1.5 rounded-full" style="width: 0%"></div></div>
+            </div>
+
+            <!-- Menu 2: Bermain -->
+            <div onclick="openMenu('bermain')" class="cursor-pointer group relative bg-white rounded-3xl p-6 shadow-md transition-all duration-300 border-b-4 border-slate-300 opacity-75" id="card-bermain">
+                <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center" id="status-bermain">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 text-3xl mb-4" id="icon-bermain">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Bermain</h3>
+                <p class="text-sm text-slate-500">10 Tantangan seru melatih literasi & logika.</p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-4"><div id="prog-bermain" class="bg-gold-500 h-1.5 rounded-full" style="width: 0%"></div></div>
+            </div>
+
+            <!-- Menu 3: Berlatih -->
+            <div onclick="openMenu('berlatih')" class="cursor-pointer group relative bg-white rounded-3xl p-6 shadow-md transition-all duration-300 border-b-4 border-slate-300 opacity-75" id="card-berlatih">
+                <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center" id="status-berlatih">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 text-3xl mb-4" id="icon-berlatih">
+                    <i class="fas fa-pen-nib"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Berlatih</h3>
+                <p class="text-sm text-slate-500">Asesmen akhir untuk mengukur pemahamanmu.</p>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-4"><div id="prog-berlatih" class="bg-rose-500 h-1.5 rounded-full" style="width: 0%"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 5. MODULE: BELAJAR ==================== -->
+    <div id="screen-belajar" class="screen-container bg-slate-100 flex flex-col h-screen">
+        <!-- Header Modul -->
+        <div class="bg-white px-4 py-3 shadow-sm flex items-center justify-between z-10 shrink-0">
+            <button onclick="goTo('screen-menu')" class="text-slate-500 hover:text-slate-800 p-2"><i class="fas fa-arrow-left text-xl"></i></button>
+            <div class="font-bold text-slate-800 text-center flex-1">Modul Belajar</div>
+            <div class="text-sm font-semibold text-islamic-600 bg-islamic-50 px-3 py-1 rounded-full"><span id="belajarCounter">1</span>/6</div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-200 h-1 shrink-0"><div id="belajarProgressBar" class="bg-islamic-500 h-1 transition-all duration-300" style="width: 16.6%"></div></div>
+
+        <!-- Content Area (Scrollable) -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+            <div class="max-w-3xl mx-auto bg-white rounded-3xl shadow-lg overflow-hidden flex flex-col min-h-full">
+                
+                <!-- Materi Container -->
+                <div id="materiContainer" class="p-6 md:p-10 flex-1">
+                    <!-- Dinamis diisi JS -->
+                </div>
+
+                <!-- Quiz Pematik Area (Bottom of slide) -->
+                <div class="bg-slate-50 p-6 md:p-8 border-t border-slate-200">
+                    <h4 class="font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-question-circle text-gold-500 mr-2 text-xl"></i> Cek Pemahaman</h4>
+                    <div id="materiQuizContainer">
+                        <!-- Dinamis diisi JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer Navigasi -->
+        <div class="bg-white border-t p-4 flex justify-between items-center shrink-0">
+            <button id="btnBelajarPrev" onclick="navigateBelajar(-1)" class="px-6 py-3 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition disabled:opacity-50">Kembali</button>
+            <button id="btnBelajarNext" onclick="navigateBelajar(1)" class="px-6 py-3 bg-islamic-600 text-white font-semibold rounded-xl hover:bg-islamic-700 transition disabled:opacity-50 shadow-md">Selanjutnya</button>
+        </div>
+    </div>
+
+    <!-- ==================== 6. MODULE: BERMAIN ==================== -->
+    <div id="screen-bermain" class="screen-container bg-islamic-50 flex flex-col h-screen">
+        <div class="bg-white px-4 py-3 shadow-sm flex items-center justify-between z-10 shrink-0 border-b-2 border-gold-400">
+            <button onclick="goTo('screen-menu')" class="text-slate-500 hover:text-slate-800 p-2"><i class="fas fa-arrow-left text-xl"></i></button>
+            <div class="font-bold text-slate-800 text-center flex-1"><i class="fas fa-gamepad text-gold-500 mr-2"></i> Zona Bermain</div>
+            <div class="text-sm font-semibold text-white bg-gold-500 px-3 py-1 rounded-full"><span id="bermainCounter">1</span>/10</div>
+        </div>
+        
+        <div class="w-full bg-slate-200 h-1.5 shrink-0"><div id="bermainProgressBar" class="bg-gold-400 h-1.5 transition-all duration-300" style="width: 10%"></div></div>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-4xl mx-auto space-y-6">
+                
+                <!-- Stimulus Teks Panjang -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="flex items-center mb-3">
+                        <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Bahan Bacaan</span>
+                    </div>
+                    <div id="bermainStimulus" class="text-slate-700 leading-relaxed text-justify text-sm md:text-base">
+                        <!-- Teks 100-200 kata diisi JS -->
+                    </div>
+                </div>
+
+                <!-- Area Tantangan -->
+                <div class="bg-white rounded-2xl p-6 shadow-md border-t-4 border-islamic-500">
+                    <h3 id="bermainQuestion" class="text-lg font-bold text-slate-800 mb-6">Pertanyaan...</h3>
+                    
+                    <!-- Dynamic Interactive Area based on question type -->
+                    <div id="bermainInteractiveArea" class="space-y-3">
+                        <!-- Diisi JS -->
+                    </div>
+
+                    <!-- Feedback Area (Hidden initially) -->
+                    <div id="bermainFeedback" class="mt-6 hidden rounded-xl p-4 text-sm font-medium"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="bg-white border-t p-4 flex justify-end shrink-0">
+             <button id="btnBermainCek" onclick="checkBermainAnswer()" class="px-8 py-3 bg-islamic-600 text-white font-bold rounded-xl hover:bg-islamic-700 transition shadow-lg w-full md:w-auto">Cek Jawaban</button>
+             <button id="btnBermainNext" onclick="nextBermain()" class="px-8 py-3 bg-gold-500 text-slate-900 font-bold rounded-xl hover:bg-gold-400 transition shadow-lg w-full md:w-auto hidden">Lanjut Tantangan <i class="fas fa-arrow-right ml-2"></i></button>
+        </div>
+    </div>
+
+    <!-- ==================== 7. MODULE: BERLATIH ==================== -->
+    <div id="screen-berlatih" class="screen-container bg-slate-50 flex flex-col h-screen">
+        <div class="bg-white px-4 py-3 shadow-sm flex items-center justify-between z-10 shrink-0 border-b-2 border-rose-500">
+            <button onclick="promptExitBerlatih()" class="text-slate-500 hover:text-slate-800 p-2"><i class="fas fa-times text-xl"></i></button>
+            <div class="font-bold text-slate-800 text-center flex-1"><i class="fas fa-pen-nib text-rose-500 mr-2"></i> Evaluasi Akhir</div>
+            <div class="text-sm font-semibold text-white bg-rose-500 px-3 py-1 rounded-full"><span id="berlatihCounter">1</span>/10</div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-4xl mx-auto space-y-6 pb-20">
+                
+                <!-- Badge Level -->
+                <div class="flex justify-between items-center">
+                    <span id="berlatihLevelBadge" class="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Level 1: Dasar</span>
+                    <span id="berlatihPoinBadge" class="text-slate-500 text-sm font-semibold">Bobot: 8 Poin</span>
+                </div>
+
+                <!-- Stimulus Teks Panjang -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <div id="berlatihStimulus" class="text-slate-700 leading-relaxed text-justify text-sm md:text-base">
+                        <!-- Teks 100-200 kata -->
+                    </div>
+                </div>
+
+                <!-- Pertanyaan & Opsi -->
+                <div class="bg-white rounded-2xl p-6 shadow-md">
+                    <h3 id="berlatihQuestion" class="text-lg font-bold text-slate-800 mb-6">Pertanyaan...</h3>
+                    <div id="berlatihOptions" class="space-y-3">
+                        <!-- Diisi JS radio buttons -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border-t p-4 flex justify-between items-center shrink-0 fixed bottom-0 w-full md:static">
+             <button id="btnBerlatihPrev" onclick="navigateBerlatih(-1)" class="px-6 py-3 text-slate-500 font-bold rounded-xl bg-slate-100 hover:bg-slate-200 transition">Kembali</button>
+             <button id="btnBerlatihNext" onclick="navigateBerlatih(1)" class="px-8 py-3 bg-islamic-600 text-white font-bold rounded-xl hover:bg-islamic-700 transition shadow-lg">Selanjutnya</button>
+             <button id="btnBerlatihSubmit" onclick="submitBerlatih()" class="px-8 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition shadow-lg hidden"><i class="fas fa-check-double mr-2"></i> Kumpulkan</button>
+        </div>
+    </div>
+
+    <!-- ==================== 8. REPORT SCREEN (PDF TEMPLATE) ==================== -->
+    <div id="screen-report" class="screen-container bg-slate-200 p-4 md:p-8 relative min-h-screen overflow-y-auto">
+        
+        <div class="max-w-4xl mx-auto mb-4 flex justify-between items-center print:hidden">
+            <button onclick="goTo('screen-menu')" class="px-4 py-2 bg-white text-slate-700 rounded-lg shadow font-medium hover:bg-slate-50"><i class="fas fa-arrow-left mr-2"></i> Ke Menu</button>
+            <button onclick="downloadPDF()" class="px-6 py-2 bg-rose-600 text-white rounded-lg shadow-lg font-bold hover:bg-rose-700 flex items-center"><i class="fas fa-download mr-2"></i> Unduh PDF / Cetak</button>
+        </div>
+
+        <!-- The Document to be Printed/PDF'd -->
+        <div id="pdfDocument" class="max-w-4xl mx-auto bg-white shadow-2xl p-8 md:p-12 print:shadow-none print:p-0">
+            
+            <!-- KOP -->
+            <div class="border-b-4 border-double border-slate-800 pb-6 mb-8 text-center flex flex-col items-center">
+                <div class="flex items-center justify-center w-full mb-4">
+                    <!-- Logo Kemenag Placeholder -->
+                    <div class="w-16 h-16 bg-islamic-100 rounded-full flex items-center justify-center text-islamic-600 text-2xl mr-4 border-2 border-islamic-600"><i class="fas fa-star-and-crescent"></i></div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold uppercase text-slate-900 tracking-wide">Laporan Hasil Belajar (MPI)</h1>
+                        <h2 class="text-lg font-semibold text-slate-700">Mata Pelajaran Sejarah Kebudayaan Islam</h2>
+                        <p class="text-sm text-slate-600">MIS Al-Awwaliyah Karyamukti</p>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 italic w-full text-right mt-2 border-t pt-2">Pengembang: Abdullah S. Kaharu, S.Pd (abdullah.kaharu@gmail.com)</p>
+            </div>
+
+            <!-- Identitas Siswa -->
+            <div class="mb-8 flex justify-between items-end border-b border-slate-200 pb-4">
+                <table class="text-sm text-slate-700">
+                    <tr><td class="w-32 py-1 font-semibold">Nama Siswa</td><td class="w-4">:</td><td class="font-bold text-slate-900" id="repName">Nama</td></tr>
+                    <tr><td class="py-1 font-semibold">Kelas</td><td>:</td><td id="repClass">Kelas</td></tr>
+                    <tr><td class="py-1 font-semibold">Topik Materi</td><td>:</td><td>Perjuangan Nabi Muhammad SAW (Makkah & Madinah)</td></tr>
+                </table>
+                <div class="text-right text-sm text-slate-500">
+                    Tanggal: <span id="repDate">DD/MM/YYYY</span>
+                </div>
+            </div>
+
+            <!-- Rekap Nilai Utama -->
+            <div class="flex flex-col md:flex-row gap-6 mb-8">
+                <!-- Bermain -->
+                <div class="flex-1 bg-slate-50 rounded-xl p-6 border border-slate-200 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gold-400"></div>
+                    <h3 class="font-bold text-slate-700 mb-2 uppercase text-xs tracking-wider">Performa Bermain</h3>
+                    <div class="text-4xl font-extrabold text-slate-800 my-2" id="repBermainScore">0</div>
+                    <p class="text-xs text-slate-500">Tantangan Diselesaikan: <span id="repBermainTuntas">0/10</span></p>
+                </div>
+                
+                <!-- Berlatih (Final Score) -->
+                <div class="flex-1 bg-islamic-50 rounded-xl p-6 border border-islamic-200 text-center relative overflow-hidden shadow-sm">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-islamic-500"></div>
+                    <h3 class="font-bold text-slate-800 mb-2 uppercase text-sm tracking-wider">Nilai Asesmen (Berlatih)</h3>
+                    <div class="text-5xl font-extrabold text-islamic-700 my-2" id="repBerlatihScore">0</div>
+                    <div class="inline-block bg-white px-3 py-1 rounded-full text-sm font-bold border border-islamic-200 shadow-sm" id="repPredicate">Predikat</div>
+                </div>
+            </div>
+
+            <!-- Rincian Level Asesmen -->
+            <h3 class="font-bold text-slate-800 mb-4 border-l-4 border-slate-400 pl-3">Rincian Penguasaan Kognitif</h3>
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-8">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                        <tr>
+                            <th class="px-6 py-3">Tingkat Kesulitan</th>
+                            <th class="px-6 py-3 text-center">Jumlah Soal</th>
+                            <th class="px-6 py-3 text-center">Benar</th>
+                            <th class="px-6 py-3 text-right">Poin Didapat</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100" id="repLevelTable">
+                        <!-- JS fills this -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Catatan KBC & Rekomendasi -->
+            <div class="grid md:grid-cols-2 gap-6 mb-12">
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-3 text-sm flex items-center"><i class="fas fa-heart text-rose-500 mr-2"></i> Catatan Kurikulum Berbasis Cinta</h3>
+                    <p class="text-sm text-slate-600 bg-rose-50 p-4 rounded-xl border border-rose-100 text-justify leading-relaxed" id="repKbcNote">
+                        Siswa telah menunjukkan pemahaman yang baik terhadap nilai-nilai pengorbanan, persaudaraan, dan kecintaan pada lingkungan (layaknya asrinya Karyamukti) dari peristiwa Hijrah.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-3 text-sm flex items-center"><i class="fas fa-comment-dots text-blue-500 mr-2"></i> Rekomendasi Guru</h3>
+                    <p class="text-sm text-slate-600 bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify leading-relaxed" id="repRecommendation">
+                        Rekomendasi...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tanda Tangan -->
+            <div class="flex justify-end mt-12 pt-8 border-t border-dashed border-slate-300">
+                <div class="text-center">
+                    <p class="text-sm text-slate-700 mb-16">Karyamukti, <span id="repDateSign"></span></p>
+                    <p class="font-bold text-slate-800 underline">Abdullah S. Kaharu, S.Pd</p>
+                    <p class="text-xs text-slate-500 mt-1">NIP. - / Guru Pengampu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        /* --- STATE MANAGEMENT --- */
+        const state = {
+            student: { name: "", class: "" },
+            progress: { 
+                belajar: 0, // max 6
+                bermain: 0, // max 10
+                berlatih: 0 // max 10
+            },
+            status: {
+                belajarOpen: true,
+                bermainOpen: false,
+                berlatihOpen: false,
+                isCompleted: false
+            },
+            scores: { bermain: 0, berlatih: 0 },
+            berlatihAnswers: [], // Stores user answers to calculate levels later
+            current: { belajarSlide: 0, bermainIndex: 0, berlatihIndex: 0 }
+        };
+
+        /* --- DATA MATERI (BELAJAR) --- */
+        // Integrasi KBC, Konteks Lokal (Karyamukti), Al-Quran
+        const materiData = [
+            {
+                title: "Dakwah di Tanah Gersang",
+                content: `
+                    <div class="space-y-5 text-slate-700 text-lg md:text-xl leading-relaxed">
+                        <p>Bayangkan lingkungan sekitar rumah kita di <b class="text-islamic-700">Desa Karyamukti</b>. Sejauh mata memandang, kita melihat pepohonan yang rimbun, sawah yang hijau menyejukkan, dan udara yang segar. Lingkungan yang damai ini sangat berbeda dengan kondisi geografis Kota Makkah tempat Nabi Muhammad SAW dilahirkan. Makkah adalah lembah tandus yang dikelilingi gunung-gunung batu vulkanik yang panas dan kering.</p>
+                        <p>Tidak hanya alamnya yang keras, hati dan tradisi masyarakatnya saat itu (disebut kaum Jahiliyah) juga sangat keras. Mereka menyembah berhala yang dibuat dari batu dan kayu, merendahkan perempuan, dan sering berperang antar suku hanya karena masalah sepele.</p>
+                        <div class="bg-gradient-to-r from-rose-50 to-white p-6 rounded-2xl border-l-4 border-rose-500 shadow-sm mt-6">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 mr-3"><i class="fas fa-heart"></i></div>
+                                <strong class="text-rose-700 text-lg">Nilai Cinta Kasih (KBC)</strong>
+                            </div>
+                            <p class="text-base">Rasulullah tidak memulai dakwah dengan kekerasan, melainkan dengan kelembutan akhlak dan <b>cinta kasih</b>. Beliau berdakwah secara sembunyi-sembunyi kepada keluarga terdekat dahulu agar tidak menimbulkan kekacauan. Ini mengajarkan kita untuk selalu mengedepankan kasih sayang dan strategi yang damai dalam memecahkan masalah.</p>
+                        </div>
+                    </div>
+                `,
+                quiz: {
+                    question: "Apa perbedaan paling mencolok antara kondisi alam awal dakwah Nabi dengan desa Karyamukti?",
+                    options: [
+                        "Makkah banyak sungai besar, Karyamukti gersang",
+                        "Makkah sangat dingin bersalju, Karyamukti tropis",
+                        "Makkah lembah batu tandus dan panas, Karyamukti dikelilingi sawah hijau dan pepohonan"
+                    ],
+                    correct: 2
+                }
+            },
+            {
+                title: "Ujian Kesabaran & Penolakan Quraisy",
+                content: `
+                    <div class="space-y-5 text-slate-700 text-lg md:text-xl leading-relaxed">
+                        <p>Ketika Nabi Muhammad SAW mulai berdakwah secara terang-terangan menyeru agar menyembah hanya kepada Allah SWT (Tauhid), para pembesar kafir Quraisy menolak keras. <b>Mengapa?</b> Karena ajaran Islam mengancam status sosial mereka yang merasa lebih tinggi dari budak, dan mengancam bisnis perdagangan berhala mereka di sekitar Ka'bah.</p>
+                        <p>Penolakan ini bukan sekadar kata-kata. Umat Islam awal disiksa dengan kejam di tengah terik matahari gurun. Bayangkan panasnya aspal jalanan di Karyamukti saat siang bolong, lalu bayangkan ditindih batu besar di atas pasir gurun. Begitulah beratnya ujian mereka.</p>
+                        <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 text-blue-800 text-base flex gap-4 items-start shadow-sm mt-6">
+                            <i class="fas fa-info-circle text-2xl text-blue-500 mt-1"></i>
+                            <p>Namun, Nabi Muhammad SAW mengajarkan kesabaran yang luar biasa. Beliau melarang sahabatnya membalas dendam. Bahkan ketika beliau dilempari batu di kota Thaif hingga berdarah, beliau malah mendoakan kebaikan untuk penduduk kota tersebut.</p>
+                        </div>
+                    </div>
+                `,
+                quiz: {
+                    question: "Sikap utama apa yang ditunjukkan Rasulullah saat menghadapi siksaan kaum kafir Quraisy?",
+                    options: [
+                        "Kesabaran tanpa batas dan tidak membalas dengan kekerasan",
+                        "Meminta bantuan pasukan dari negara tetangga",
+                        "Membalas siksaan mereka di malam hari"
+                    ],
+                    correct: 0
+                }
+            },
+            {
+                title: "Rencana Pembunuhan & Perintah Hijrah",
+                content: `
+                    <div class="space-y-5 text-slate-700 text-lg md:text-xl leading-relaxed">
+                        <p>Kekejaman kaum kafir Quraisy mencapai puncaknya. Mereka mengadakan rapat rahasia di Darun Nadwah dengan rencana keji: memilih satu pemuda kuat dari setiap kabilah (suku) untuk bersama-sama membunuh Nabi di malam hari, sehingga keluarga Nabi tidak bisa menuntut balas.</p>
+                        
+                        <div class="bg-islamic-50 p-6 md:p-8 rounded-3xl border border-islamic-200 shadow-inner my-8 relative overflow-hidden">
+                            <!-- Background Ornament -->
+                            <i class="fas fa-quran absolute -right-4 -bottom-4 text-8xl text-islamic-100 opacity-50 pointer-events-none"></i>
+                            
+                            <div class="flex justify-between items-center mb-6 relative z-10">
+                                <button onclick="toggleAudio('audio-alanfal', this)" class="bg-islamic-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-islamic-700 hover:scale-105 transition-all">
+                                    <i class="fas fa-play ml-1"></i>
+                                </button>
+                                <div class="bg-white px-3 py-1 rounded-full text-xs font-bold text-islamic-600 border border-islamic-200 shadow-sm">Q.S. Al-Anfal: 30</div>
+                            </div>
+                            <p class="font-arabic text-3xl md:text-4xl text-right mb-6 leading-[2.5] text-islamic-900 relative z-10">وَإِذْ يَمْكُرُ بِكَ ٱلَّذِينَ كَفَرُوا۟ لِيُثْبِتُوكَ أَوْ يَقْتُلُوكَ أَوْ يُخْرِجُوكَ ۚ وَيَمْكُرُونَ وَيَمْكُرُ ٱللَّهُ ۖ وَٱللَّهُ خَيْرُ ٱلْمَاكِرِينَ</p>
+                            <p class="text-base text-slate-600 italic relative z-10 border-t border-islamic-200 pt-4">"Dan (ingatlah), ketika orang-orang kafir memikirkan tipu daya terhadapmu untuk menangkap dan memenjarakanmu atau membunuhmu, atau mengusirmu. Mereka memikirkan tipu daya dan Allah menggagalkan tipu daya itu. Allah adalah sebaik-baik pembalas tipu daya."</p>
+                            <audio id="audio-alanfal" src="https://everyayah.com/data/Alafasy_128kbps/008030.mp3" preload="none"></audio>
+                        </div>
+
+                        <p>Mengetahui rencana ini, Nabi mengizinkan sahabat untuk hijrah. Saat malam penyerangan, <b>Ali bin Abi Thalib</b> dengan berani menggantikan posisi tidur Nabi di ranjangnya. Ini adalah bentuk <b>cinta dan pengorbanan tingkat tinggi</b> demi keselamatan Rasulullah.</p>
+                    </div>
+                `,
+                quiz: {
+                    question: "Siapa sahabat yang menunjukkan pengorbanan besar dengan menggantikan posisi tidur Nabi saat rumah beliau dikepung?",
+                    options: [
+                        "Abu Bakar As-Siddiq",
+                        "Umar bin Khattab",
+                        "Ali bin Abi Thalib"
+                    ],
+                    correct: 2
+                }
+            },
+            {
+                title: "Bersembunyi di Gua Tsur",
+                content: `
+                    <div class="space-y-5 text-slate-700 text-lg md:text-xl leading-relaxed">
+                        <p>Nabi Muhammad SAW keluar rumah dengan selamat. Beliau ditemani Abu Bakar As-Siddiq memulai perjalanan menuju Yatsrib. Agar tidak terlacak, mereka mengambil jalan ke arah selatan dan bersembunyi di <b>Gua Tsur</b> selama tiga hari.</p>
+                        <p>Saat pengejar Quraisy berada tepat di atas mulut gua, Abu Bakar sangat khawatir, bukan takut mati, tapi takut Rasulullah terluka.</p>
+                        
+                        <div class="bg-islamic-50 p-6 md:p-8 rounded-3xl border border-islamic-200 shadow-inner my-8 relative overflow-hidden">
+                            <i class="fas fa-quran absolute -right-4 -bottom-4 text-8xl text-islamic-100 opacity-50 pointer-events-none"></i>
+                            <div class="flex justify-between items-center mb-6 relative z-10">
+                                <button onclick="toggleAudio('audio-attaubah', this)" class="bg-islamic-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-islamic-700 hover:scale-105 transition-all">
+                                    <i class="fas fa-play ml-1"></i>
+                                </button>
+                                <div class="bg-white px-3 py-1 rounded-full text-xs font-bold text-islamic-600 border border-islamic-200 shadow-sm">Q.S. At-Taubah: 40</div>
+                            </div>
+                            <p class="font-arabic text-4xl md:text-5xl text-right mb-6 leading-loose text-islamic-900 relative z-10">لَا تَحْزَنْ إِنَّ ٱللَّهَ مَعَنَا</p>
+                            <p class="text-base text-slate-600 italic relative z-10 border-t border-islamic-200 pt-4">"...Janganlah engkau bersedih, sesungguhnya Allah bersama kita..."</p>
+                            <audio id="audio-attaubah" src="https://everyayah.com/data/Alafasy_128kbps/009040.mp3" preload="none"></audio>
+                        </div>
+
+                        <p>Ucapan Nabi menenangkan Abu Bakar. Ini bukti <b>Tawakkal (berserah diri kepada Allah)</b> setelah berusaha maksimal. Keadaan selamat ini juga dibantu oleh perlindungan Allah melalui sarang laba-laba di mulut gua.</p>
+                    </div>
+                `,
+                quiz: {
+                    question: "Apa kalimat penenang yang diucapkan Nabi kepada Abu Bakar saat bersembunyi di Gua Tsur?",
+                    options: [
+                        "Mari kita lawan mereka sekarang juga",
+                        "Jangan bersedih, sesungguhnya Allah bersama kita",
+                        "Berlarilah keluar dan tinggalkan aku sendiri"
+                    ],
+                    correct: 1
+                }
+            },
+            {
+                title: "Tiba di Yatsrib (Madinah) & Persaudaraan",
+                content: `
+                    <div class="space-y-5 text-slate-700 text-lg md:text-xl leading-relaxed">
+                        <p>Setelah perjalanan jauh melintasi gurun, Nabi dan Abu Bakar tiba di Yatsrib. Kedatangan beliau disambut sangat meriah dengan lantunan syair <i>Thala'al Badru 'Alaina</i>. Nama kota Yatsrib kemudian diubah menjadi <b>Madinah</b>.</p>
+                        <p>Alam Madinah lebih bersahabat, banyak kebun kurma dan sumber air, mirip dengan suasana pertanian di <b>Desa Karyamukti</b> yang subur dan warganya saling gotong royong.</p>
+                        <div class="bg-amber-50 p-6 rounded-2xl border-l-4 border-amber-500 shadow-sm mt-6">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mr-3"><i class="fas fa-users"></i></div>
+                                <strong class="text-amber-800 text-lg">Cinta Sesama (Ukhuwah)</strong>
+                            </div>
+                            <p class="text-base">Langkah revolusioner Nabi adalah mempersaudarakan kaum <b>Muhajirin</b> (penduduk Makkah yang hijrah tanpa harta) dengan kaum <b>Ansar</b> (penduduk Madinah). Kaum Ansar membagi rumah dan kebun mereka dengan tulus. Inilah puncak persaudaraan Islam.</p>
+                        </div>
+                    </div>
+                `,
+                quiz: {
+                    question: "Sikap kaum Ansar yang membagi harta kepada kaum Muhajirin mirip dengan budaya baik apa yang sering kita lihat di desa agraris seperti Karyamukti?",
+                    options: [
+                        "Gotong royong dan saling berbagi hasil panen",
+                        "Saling bersaing untuk menjadi yang paling kaya",
+                        "Menjual bantuan dengan harga tinggi"
+                    ],
+                    correct: 0
+                }
+            },
+            {
+                title: "Membangun Ekosistem Harmonis (Piagam Madinah)",
+                content: `
+                    <div class="space-y-5 text-slate-700 text-lg md:text-xl leading-relaxed">
+                        <p>Untuk menyatukan seluruh penduduk Madinah yang majemuk (Muslim, Arab non-Muslim, dan Yahudi), Nabi merumuskan <b>Piagam Madinah</b>. Isinya menjamin kebebasan beragama dan kewajiban membela kota bersama-sama. Ini mencontohkan <b>Cinta Tanah Air</b>.</p>
+                        
+                        <div class="bg-gradient-to-r from-emerald-50 to-white p-6 rounded-2xl border-l-4 border-islamic-500 shadow-sm mt-6">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-islamic-600 mr-3"><i class="fas fa-leaf"></i></div>
+                                <strong class="text-islamic-800 text-lg">Cinta Alam & Lingkungan (KBC)</strong>
+                            </div>
+                            <p class="text-base">Di Madinah, Nabi juga mengeluarkan aturan konservasi alam. Beliau menetapkan zona <i>Hima</i> (kawasan lindung) di mana pohon tidak boleh ditebang dan satwa tidak boleh diburu. Beliau mengajarkan bahwa menjaga keasrian lingkungan (seperti indahnya sawah & pohon di <b>Karyamukti</b>) adalah bagian dari iman dan rasa syukur.</p>
+                        </div>
+                    </div>
+                `,
+                quiz: {
+                    question: "Aturan konservasi alam (Hima) yang diterapkan Nabi di Madinah mengajarkan kita untuk...",
+                    options: [
+                        "Menghabiskan sumber daya alam secepat mungkin",
+                        "Menjaga dan melestarikan lingkungan sekitar kita (seperti pohon & sawah)",
+                        "Membangun gedung tinggi di atas lahan hijau"
+                    ],
+                    correct: 1
+                }
+            }
+        ];
+
+        /* --- DATA BERMAIN (10 Tantangan dengan stimulus panjang) --- */
+        // Menggunakan variasi Multiple Choice bergaya untuk mensimulasikan gamifikasi di mobile tanpa drag&drop HTML5 native yang buggy.
+        const bermainData = [
+            {
+                type: "mc",
+                stimulus: "Desa Karyamukti dikenal dengan pemandangannya yang asri, dikelilingi oleh pepohonan rindang dan hamparan sawah hijau yang menyejukkan mata. Masyarakatnya hidup rukun, damai, dan saling tolong-menolong. Suasana damai dan hijau di desa kita ini sangat kontras dengan kondisi Kota Makkah pada masa awal kelahiran dan kenabian Muhammad SAW. Makkah adalah wilayah lembah gurun pasir yang tandus, kering, dan dikelilingi oleh gunung-gunung batu vulkanik yang memancarkan hawa panas. Tidak hanya alamnya yang keras dan gersang, namun tradisi masyarakat Jahiliyah saat itu juga sangat keras dan jauh dari nilai-nilai kemanusiaan. Mereka menyembah benda mati berupa berhala, menindas kaum yang lemah, serta sering terlibat peperangan antarsuku hanya karena perselisihan kecil. Ketika Nabi Muhammad SAW mulai mendakwahkan ajaran Islam yang membawa pesan cinta kasih, kesetaraan manusia, dan ketauhidan (mengesakan Allah), beliau menghadapi gelombang penolakan yang luar biasa keras dari para pembesar kafir Quraisy.",
+                question: "Berdasarkan narasi yang membandingkan kondisi Desa Karyamukti dan Makkah tersebut, apa alasan paling mendasar kaum kafir Quraisy menolak dakwah Nabi Muhammad SAW?",
+                options: [
+                    "Karena Nabi Muhammad SAW meminta bayaran yang mahal kepada mereka untuk setiap ajaran yang disampaikan.",
+                    "Karena ajaran kesetaraan dalam Islam mengancam status sosial mereka yang suka menindas, serta mengancam bisnis penyembahan berhala.",
+                    "Karena mereka ingin pindah mencari wilayah yang hijau dan subur seperti Desa Karyamukti daripada tinggal di Makkah."
+                ],
+                correct: 1
+            },
+            {
+                type: "mc",
+                stimulus: "Siksaan yang dialami oleh para pengikut awal Nabi Muhammad SAW di Makkah sungguh di luar batas kemanusiaan. Salah satu kisah yang paling menyayat hati adalah penderitaan keluarga Yasir dan Bilal bin Rabah. Bilal, seorang budak asal Ethiopia, dijemur di bawah terik matahari siang bolong di atas padang pasir yang membara, lalu dadanya ditindih dengan batu besar oleh majikannya, Umayyah bin Khalaf. Umayyah memaksanya untuk kembali menyembah berhala Lata dan Uzza. Bayangkan jika kita berjalan tanpa alas kaki di jalan aspal Karyamukti saat cuaca sangat terik, tentu sangat panas, apalagi ditindih batu di gurun pasir. Namun, di tengah siksaan fisik yang luar biasa hebat itu, dari bibir Bilal yang kering hanya keluar satu kata dengan penuh keyakinan: 'Ahad... Ahad...' yang berarti Allah Yang Maha Esa. Keyakinan tauhid telah tertanam kuat di relung hatinya, tak bisa digoyahkan oleh siksaan fisik apapun.",
+                question: "Sikap teguh yang ditunjukkan oleh Bilal bin Rabah saat menghadapi siksaan berat di tengah gurun pasir merupakan penerapan langsung dari nilai...",
+                options: [
+                    "Kecintaan yang mendalam dan keteguhan iman yang murni hanya kepada Allah SWT.",
+                    "Keinginan untuk menunjukkan kekuatan fisiknya kepada majikannya.",
+                    "Sikap putus asa karena tidak ada kaum muslimin lain yang berani datang menolongnya."
+                ],
+                correct: 0
+            },
+            {
+                type: "mc",
+                stimulus: "Rencana jahat kaum kafir Quraisy untuk membunuh Nabi Muhammad SAW telah disusun sangat rapi. Mereka berkumpul di balai kota bernama Darun Nadwah. Abu Jahal mengusulkan sebuah ide licik: pilihlah satu pemuda paling kuat dari setiap kabilah (suku) yang ada di Makkah. Malam itu juga, pemuda-pemuda bersenjata tajam tersebut akan mengepung rumah Nabi dan menebaskan pedang mereka bersama-sama. Tujuannya agar Bani Hasyim (keluarga besar Nabi) tidak akan mampu menuntut balas darah (qisas) karena harus berperang melawan seluruh kabilah di Makkah sekaligus. Namun, Allah SWT Maha Mengetahui tipu daya mereka. Allah menurunkan wahyu melalui Malaikat Jibril untuk memberitahu rencana tersebut dan memerintahkan Nabi untuk segera berhijrah malam itu juga meninggalkan kampung halamannya.",
+                question: "Strategi licik kaum kafir Quraisy dengan mengutus pemuda dari setiap suku untuk mengepung dan membunuh Nabi bertujuan agar...",
+                options: [
+                    "Nabi Muhammad merasa kagum dengan persatuan pemuda Makkah dan akhirnya menyerah.",
+                    "Keluarga besar Nabi (Bani Hasyim) tidak bisa menuntut balas dendam pada satu suku tertentu karena pelakunya banyak.",
+                    "Para pemuda tersebut bisa langsung menguasai harta benda dan rumah peninggalan Nabi Muhammad."
+                ],
+                correct: 1
+            },
+            {
+                type: "mc",
+                stimulus: "Malam penyerangan pun tiba. Para pemuda Quraisy yang membawa pedang telah mengepung rapat rumah Nabi Muhammad SAW dari segala penjuru. Dalam kondisi yang sangat genting dan mengancam nyawa tersebut, Ali bin Abi Thalib, yang saat itu masih berusia muda, menunjukkan keberanian dan cintanya yang luar biasa kepada Rasulullah. Atas perintah Nabi, Ali bersedia memakai selimut berwarna hijau milik Nabi dan tidur berbaring di tempat tidur beliau. Ali tahu persis risiko perbuatannya; pedang musuh bisa menebasnya kapan saja jika mereka mengira ia adalah Nabi. Namun, rasa cintanya kepada utusan Allah mengalahkan rasa takutnya terhadap kematian. Berkat keberanian Ali sebagai pengalih perhatian, Nabi Muhammad SAW berhasil keluar rumah dengan selamat melewati para pengepung yang tertidur karena kehendak Allah SWT.",
+                question: "Tindakan berani Ali bin Abi Thalib menggantikan posisi tidur Nabi di malam pengepungan mengajarkan kita nilai karakter...",
+                options: [
+                    "Pengorbanan tanpa pamrih dan cinta yang tulus demi menyelamatkan pemimpin agama.",
+                    "Keinginan untuk mendapatkan pujian dari para sahabat senior lainnya.",
+                    "Kecerdikan dalam mencari kesempatan tidur menggunakan selimut yang bagus."
+                ],
+                correct: 0
+            },
+            {
+                type: "mc",
+                stimulus: "Perjalanan Hijrah menuju Yatsrib (Madinah) dilakukan secara sembunyi-sembunyi dan penuh strategi. Untuk mengecoh musuh yang pasti akan mencari ke arah utara (jalur biasa ke Madinah), Nabi Muhammad SAW dan Abu Bakar justru berjalan ke arah selatan dan memutuskan untuk bersembunyi di dalam Gua Tsur selama tiga hari tiga malam. Saat bersembunyi, suatu ketika regu pencari dari kaum Quraisy tiba tepat di atas mulut gua. Jarak mereka sangat dekat hingga Abu Bakar bisa melihat kaki mereka. Abu Bakar berbisik dengan gemetar, 'Wahai Rasulullah, seandainya salah seorang dari mereka melihat ke bawah telapak kakinya, pasti mereka akan melihat kita.' Dalam ketegangan luar biasa itu, Nabi tidak panik, beliau justru menenangkan sahabatnya dengan kalimat tauhid yang abadi: 'Laa tahzan, innallaha ma'ana' (Janganlah engkau bersedih, sesungguhnya Allah bersama kita).",
+                question: "Ketenangan Nabi Muhammad SAW di dalam Gua Tsur saat musuh berada tepat di atas mereka mencerminkan sikap...",
+                options: [
+                    "Kepasrahan tanpa melakukan usaha apa-apa sejak awal kejadian.",
+                    "Keyakinan dan Tawakkal yang sempurna kepada perlindungan Allah setelah melakukan ikhtiar (bersembunyi).",
+                    "Meremehkan kemampuan musuh dalam melacak keberadaan mereka."
+                ],
+                correct: 1
+            },
+            {
+                type: "mc",
+                stimulus: "Penduduk Yatsrib yang kemudian disebut kaum Ansar (para penolong) menunjukkan akhlak yang sangat mulia saat menyambut kedatangan kaum Muhajirin (orang-orang Makkah yang berhijrah). Kaum Muhajirin tiba di Madinah dengan tangan kosong, mereka meninggalkan rumah, tanah, dan harta benda mereka di Makkah demi mempertahankan iman. Melihat kondisi saudaranya seiman yang kesulitan, kaum Ansar tidak hanya memberikan tumpangan, tetapi mereka membagi dua harta yang mereka miliki. Jika seorang Ansar memiliki dua kebun kurma, ia akan memberikan satu kebunnya untuk saudaranya Muhajirin. Jika ia memiliki dua rumah, satu rumah diberikan. Semangat saling membantu tanpa pamrih ini sangat mirip dengan tradisi gotong royong dan kesetiakawanan sosial yang masih kuat dijaga oleh masyarakat pedesaan kita, seperti saat warga Karyamukti saling bahu-membahu membangun rumah warga atau membersihkan saluran sawah.",
+                question: "Nilai apa yang bisa kita pelajari dari interaksi antara kaum Ansar dan kaum Muhajirin yang bisa diterapkan dalam kehidupan bertetangga di desa kita?",
+                options: [
+                    "Sikap individualis, mengurus diri sendiri asalkan kebutuhan pribadi terpenuhi.",
+                    "Rasa empati, cinta sesama manusia, dan rela berkorban membantu saudara yang sedang kesulitan.",
+                    "Membantu orang lain dengan harapan mendapatkan imbalan uang yang lebih besar nantinya."
+                ],
+                correct: 1
+            },
+            {
+                type: "mc",
+                stimulus: "Setelah menetap di Madinah, Nabi Muhammad SAW menyadari bahwa kota tersebut dihuni oleh masyarakat yang majemuk. Selain umat Islam (Muhajirin dan Ansar), terdapat pula kabilah-kabilah Yahudi (seperti Bani Qainuqa, Bani Nadhir, Bani Quraizhah) dan suku-suku Arab yang belum memeluk Islam. Untuk menciptakan stabilitas keamanan dan kedamaian hidup berdampingan, Rasulullah memprakarsai pembuatan dokumen perjanjian tertulis yang menyepakati aturan hidup bersama. Dokumen bersejarah ini dikenal sebagai 'Piagam Madinah'. Salah satu poin penting dalam piagam tersebut adalah menjamin kebebasan beragama bagi seluruh penduduk dan menetapkan kewajiban bersama bagi seluruh warga (apapun agamanya) untuk membela kota Madinah jika diserang oleh musuh dari luar.",
+                question: "Poin kesepakatan dalam Piagam Madinah yang mewajibkan seluruh warga membela kota dari serangan musuh luar merupakan wujud penanaman nilai...",
+                options: [
+                    "Cinta Tanah Air dan tanggung jawab menjaga keamanan wilayah tempat tinggal bersama.",
+                    "Eksklusivisme dan memisahkan diri dari kelompok masyarakat yang berbeda keyakinan.",
+                    "Keinginan untuk memonopoli kekuasaan militer hanya di tangan satu suku tertentu."
+                ],
+                correct: 0
+            },
+            {
+                type: "mc",
+                stimulus: "Meskipun sibuk membangun tata masyarakat politik dan sosial, Nabi Muhammad SAW di Madinah juga menaruh perhatian yang sangat besar pada kelestarian alam lingkungan. Madinah memiliki tanah yang lebih subur dibandingkan Makkah, mirip dengan suburnya area pertanian dan pepohonan di Desa Karyamukti. Untuk menjaga ekosistem agar tidak rusak oleh eksploitasi berlebihan, Rasulullah menetapkan aturan wilayah 'Hima' (zona konservasi alam/cagar alam). Di area Hima yang terletak di sekitar Madinah, penduduk dilarang keras menebang pohon secara sembarangan, mematahkan dahan hijau tanpa alasan mendesak, atau memburu hewan-hewan liar di dalamnya. Beliau mengajarkan bahwa berbuat baik kepada makhluk non-manusia (tumbuhan dan hewan) juga bernilai ibadah sedekah.",
+                question: "Penetapan wilayah 'Hima' (zona konservasi) oleh Nabi di Madinah sejalan dengan ajaran Kurikulum Berbasis Cinta (KBC) yaitu pada aspek...",
+                options: [
+                    "Cinta kepada kekuasaan dan memperluas wilayah kekuasaan kerajaan Islam.",
+                    "Cinta kelestarian alam dan lingkungan hidup sebagai bentuk tanggung jawab memelihara bumi titipan Allah.",
+                    "Cinta harta benda dengan cara menguasai seluruh sumber daya alam untuk kepentingan pribadi."
+                ],
+                correct: 1
+            },
+            {
+                type: "mc",
+                stimulus: "Dalam peristiwa Hijrah, strategi dan pembagian peran dilakukan dengan sangat rapi oleh Nabi Muhammad SAW. Selain Ali bin Abi Thalib yang tidur menggantikan Nabi, ada peran-peran rahasia yang krusial. Abdullah bin Abu Bakar (putra Abu Bakar) bertugas membaur dengan musyrikin Quraisy di siang hari untuk menyadap informasi tentang rencana pergerakan mereka, lalu menyampaikannya secara diam-diam ke Gua Tsur pada malam hari. Asma binti Abu Bakar bertugas membawa suplai makanan untuk Nabi dan ayahnya di malam hari dengan merobek ikat pinggangnya (Nitaqain) untuk mengikat makanan tersebut. Sementara itu, Amir bin Fuhairah, seorang penggembala kambing, bertugas menggiring domba-dombanya melewati jejak kaki Abdullah dan Asma agar jejak kaki mereka menuju Gua Tsur terhapus oleh jejak kaki domba.",
+                question: "Dari pembagian tugas rahasia di atas, taktik cerdas apa yang dilakukan oleh Amir bin Fuhairah untuk melindungi rombongan Hijrah?",
+                options: [
+                    "Bertarung melawan pasukan Quraisy secara langsung menggunakan pedang.",
+                    "Menggiring kawanan kambingnya untuk menghapus jejak kaki penyampai pesan dan pembawa makanan.",
+                    "Memasak makanan dari daging kambingnya untuk bekal perjalanan Nabi."
+                ],
+                correct: 1
+            },
+            {
+                type: "mc",
+                stimulus: "Peristiwa berhijrahnya Nabi Muhammad SAW dari Makkah ke Madinah bukan sekadar pelarian fisik karena ketakutan. Hijrah adalah strategi besar, sebuah transisi monumental dari fase mempertahankan diri secara pasif menuju fase membangun fondasi peradaban masyarakat yang ideal, adil, dan sejahtera. Di Madinah, nilai-nilai persaudaraan melampaui batas ikatan darah kesukuan (beralih ke ikatan aqidah dan kemanusiaan). Masjid dibangun bukan hanya sebagai tempat shalat, tetapi sebagai pusat edukasi, sosial, dan musyawarah masyarakat. Semangat transformasi dari keburukan menuju kebaikan inilah yang menjadi makna hakiki dari Hijrah yang harus terus dipraktikkan oleh setiap muslim di setiap zaman, termasuk oleh para siswa Madrasah di masa kini dalam kehidupan sehari-hari.",
+                question: "Berdasarkan teks di atas, makna hakiki dari Hijrah yang bisa diterapkan oleh siswa Madrasah dalam kehidupan sehari-hari saat ini adalah...",
+                options: [
+                    "Berpindah-pindah sekolah atau tempat tinggal setiap tahun untuk mencari suasana baru.",
+                    "Berusaha keras mengubah diri dan kebiasaan dari hal-hal yang buruk menuju perilaku yang lebih baik dan bermanfaat.",
+                    "Menghindari semua masalah yang ada dengan cara pergi meninggalkan rumah tanpa pamit."
+                ],
+                correct: 1
+            }
+        ];
+
+        /* --- DATA BERLATIH (10 Soal Asesmen, Berjenjang: 3 Mudah, 4 Sedang, 3 HOTS) --- */
+        const berlatihData = [
+            // Level 1: Dasar / Pemahaman (Recall data dari teks panjang) - Bobot 8 (1-3)
+            {
+                level: 1, poin: 8, badge: "Level 1: Dasar",
+                stimulus: "Dakwah Nabi Muhammad SAW di periode awal Makkah dilakukan secara sembunyi-sembunyi selama kurang lebih tiga tahun. Beliau menyasar orang-orang terdekat, keluarga, dan sahabat kepercayaannya. Tempat yang dijadikan sebagai pusat pembinaan dan pertemuan rahasia pada masa awal ini adalah rumah seorang sahabat bernama Arqam bin Abil Arqam yang terletak di dekat bukit Safa. Pemilihan tempat ini karena lokasinya tersembunyi dari pengawasan tokoh-tokoh Quraisy. Di rumah inilah orang-orang pertama yang masuk Islam (Assabiqunal Awwalun) diajarkan Al-Qur'an dan dibina keimanannya agar kuat menghadapi kerasnya budaya Jahiliyah di Makkah.",
+                question: "Siapakah nama sahabat yang rumahnya dijadikan sebagai pusat pertemuan dan pembinaan rahasia umat Islam pada masa awal dakwah di Makkah?",
+                options: ["Abu Bakar As-Siddiq", "Arqam bin Abil Arqam", "Umar bin Khattab", "Ali bin Abi Thalib"],
+                correct: 1
+            },
+            {
+                level: 1, poin: 8, badge: "Level 1: Dasar",
+                stimulus: "Ketika siksaan terhadap umat Islam semakin tak tertahankan, dan kondisi di Makkah semakin tidak aman bagi kelangsungan hidup kaum muslimin yang lemah, Allah memberikan kelapangan. Sebelum perintah Hijrah ke Madinah (Yatsrib) turun, Nabi Muhammad SAW pernah memerintahkan sebagian sahabatnya untuk mencari perlindungan ke sebuah negeri di seberang lautan. Negeri ini dipilih karena dipimpin oleh seorang raja beragama Nasrani yang terkenal sangat adil dan tidak pernah menzalimi siapapun di wilayahnya. Raja tersebut bernama Najasyi (Negus).",
+                question: "Ke negeri manakah rombongan pertama sahabat Nabi melakukan hijrah (sebelum ke Madinah) untuk menghindari siksaan kafir Quraisy?",
+                options: ["Negeri Syam (Suriah)", "Negeri Yaman", "Negeri Habasyah (Ethiopia)", "Negeri Persia"],
+                correct: 2
+            },
+            {
+                level: 1, poin: 8, badge: "Level 1: Dasar",
+                stimulus: "Dalam Al-Qur'an Surah At-Taubah ayat 40 diceritakan kisah dramatis dua orang yang bersembunyi di dalam gua. Allah berfirman: 'Jikalau kamu tidak menolongnya (Muhammad) maka sesungguhnya Allah telah menolongnya (yaitu) ketika orang-orang kafir (musyrikin Mekah) mengeluarkannya (dari Mekah) sedang dia salah seorang dari dua orang ketika keduanya berada dalam gua...'. Ayat ini merekam peristiwa saat musuh sudah berada tepat di mulut gua, namun Allah menyelamatkan mereka dengan tipu daya biologis berupa sarang laba-laba yang utuh dan burung merpati yang mengerami telurnya.",
+                question: "Gua apakah yang dimaksud dalam ayat dan narasi peristiwa bersembunyinya Rasulullah tersebut?",
+                options: ["Gua Hira", "Gua Tsur", "Gua Ashabul Kahfi", "Gua Uhud"],
+                correct: 1
+            },
+
+            // Level 2: Sedang / Aplikasi & Penerapan (Analogi dengan kondisi sekitar) - Bobot 10 (4-7)
+            {
+                level: 2, poin: 10, badge: "Level 2: Penerapan",
+                stimulus: "Di Desa Karyamukti, warga sering melakukan kerja bakti membersihkan irigasi sawah. Tidak ada paksaan, siapa yang kuat membantu tenaga, siapa yang kaya membawa makanan ringan, semua bersatu padu. Begitu pula saat Nabi tiba di Madinah, proyek pertama beliau bukanlah membangun istana megah untuk dirinya sendiri, melainkan mengajak seluruh sahabat (Muhajirin dan Ansar) untuk bergotong-royong membangun sebuah bangunan sederhana beratap pelepah kurma yang multifungsi. Tempat itu digunakan untuk shalat berjamaah, musyawarah warga, dan menampung sahabat yang miskin (Ahlus Suffah).",
+                question: "Bangunan pertama yang dibangun secara gotong royong oleh Nabi dan para sahabat setibanya di Madinah, yang fungsinya mirip balai warga sekaligus tempat ibadah adalah...",
+                options: ["Pasar Madinah", "Masjid Quba / Nabawi", "Benteng pertahanan", "Rumah Gubernur"],
+                correct: 1
+            },
+            {
+                level: 2, poin: 10, badge: "Level 2: Analisis",
+                stimulus: "Kaum Ansar di Madinah menyambut Muhajirin dengan penuh suka cita dan rela membagi separuh kekayaannya. Padahal mereka belum lama saling mengenal, dan secara adat suku mereka berbeda. Alasan mendasar mengapa orang Ansar rela melakukan pengorbanan harta sebesar itu bukanlah karena mereka mengharapkan tanah di Makkah kelak, bukan pula untuk dipuji Nabi, melainkan karena ikatan batin baru yang ditanamkan oleh ajaran Islam.",
+                question: "Ikatan batin apakah yang menjadikan kaum Ansar rela berkorban membantu kaum Muhajirin mengalahkan ego pribadi mereka?",
+                options: ["Ikatan bisnis perdagangan yang menguntungkan.", "Ikatan persaudaraan sesama muslim (Ukhuwah Islamiyah) karena iman kepada Allah.", "Ikatan perjanjian sewa-menyewa rumah dan lahan pertanian."],
+                correct: 1
+            },
+            {
+                level: 2, poin: 10, badge: "Level 2: Analisis",
+                stimulus: "Rencana kafir Quraisy menyuruh pemuda dari setiap suku untuk mengeksekusi Nabi secara bersamaan adalah strategi hukum adat. Dalam hukum adat Arab Jahiliyah, jika seseorang dibunuh, keluarga korban wajib membalas dendam (qishash) kepada pembunuhnya. Jika pembunuhnya dari banyak suku, maka keluarga Nabi (Bani Hasyim) akan kewalahan karena harus berperang melawan semua suku di Makkah. Hal ini menunjukkan betapa masyarakat Jahiliyah lebih mengedepankan hukum rimba dan balas dendam antarsuku.",
+                question: "Dari penjelasan di atas, tradisi negatif apa dari masyarakat Arab Jahiliyah yang ingin dihapuskan oleh ajaran kedamaian Islam?",
+                options: ["Tradisi berdagang ke luar negeri saat musim dingin.", "Tradisi menghormati tamu yang datang berkunjung.", "Tradisi fanatisme kesukuan (ashabiyah) dan kebiasaan balas dendam pertumpahan darah berantai."],
+                correct: 2
+            },
+            {
+                level: 2, poin: 10, badge: "Level 2: Penerapan",
+                stimulus: "Lingkungan Madinah merupakan daerah oase agraris yang subur, hampir menyerupai hamparan pertanian di Desa Karyamukti, berbeda jauh dengan Makkah yang gersang. Menyadari potensi alam ini, Nabi Muhammad SAW memerintahkan umat Islam yang baru datang (Muhajirin yang notabene pedagang) untuk mau belajar bercocok tanam dan menggarap lahan kosong bersama kaum Ansar. Beliau bersabda bahwa siapa yang menghidupkan 'tanah mati' (lahan terlantar), maka tanah itu menjadi haknya.",
+                question: "Kebijakan Nabi memerintahkan umatnya menggarap lahan pertanian kosong bertujuan untuk...",
+                options: ["Memperindah kota agar terlihat hijau saja.", "Menciptakan ketahanan pangan dan kemandirian ekonomi umat Islam di tempat yang baru.", "Menjual tanah tersebut kepada pihak asing dengan harga mahal."],
+                correct: 1
+            },
+
+            // Level 3: Tinggi / HOTS (Pemecahan Masalah & Evaluasi) - Bobot 12 (8-10)
+            {
+                level: 3, poin: 12, badge: "Level 3: HOTS (Penalaran)",
+                stimulus: "Piagam Madinah yang dirancang oleh Rasulullah memuat klausul bahwa seluruh penduduk Madinah, baik Muslim, Yahudi, maupun musyrikin, memiliki hak hidup yang sama, kebebasan menjalankan agamanya masing-masing tanpa paksaan, dan memiliki kewajiban kolektif. Jika ada serangan musuh dari luar yang ingin menghancurkan kota Madinah, maka semua pihak, tanpa memandang perbedaan agama, wajib bersatu mengangkat senjata mempertahankan kota.",
+                question: "Jika dihubungkan dengan konteks Negara Kesatuan Republik Indonesia (NKRI) saat ini yang masyarakatnya majemuk (beragam agama dan suku), nilai dari Piagam Madinah manakah yang relevan untuk dipraktikkan demi menjaga keutuhan bangsa?",
+                options: ["Memaksa seluruh warga negara untuk memiliki keyakinan dan kebudayaan yang seragam.", "Sikap toleransi antarumat beragama dan semangat gotong royong membela negara (nasionalisme).", "Membuat kelompok pertahanan masing-masing agama tanpa mempedulikan nasib agama lain."],
+                correct: 1
+            },
+            {
+                level: 3, poin: 12, badge: "Level 3: HOTS (Evaluasi)",
+                stimulus: "Ketika berdakwah di Makkah, Rasulullah dan umat Islam disiksa habis-habisan selama 13 tahun tanpa diizinkan untuk melawan secara fisik. Namun setelah Hijrah ke Madinah dan membangun negara yang berdaulat, barulah turun ayat yang mengizinkan umat Islam untuk mengangkat senjata 'karena mereka telah dizalimi/diusir dari kampung halamannya'. Keputusan Nabi untuk tidak melawan di Makkah, namun tegas mempertahankan diri setelah memiliki kedaulatan di Madinah, menunjukkan sebuah strategi pergerakan yang terukur.",
+                question: "Berdasarkan analisis peristiwa tersebut, kesimpulan paling tepat mengenai konsep 'perang' dalam Islam pada masa kenabian adalah...",
+                options: ["Islam selalu menyelesaikan segala urusan dengan peperangan sejak awal dakwah.", "Perang dalam Islam sifatnya adalah defensif (bertahan dan membela diri dari penindasan), bukan untuk melakukan penjajahan atau balas dendam buta.", "Nabi Muhammad merasa takut berperang di Makkah, namun menjadi berani setelah punya banyak pengikut di Madinah."],
+                correct: 1
+            },
+            {
+                level: 3, poin: 12, badge: "Level 3: HOTS (Sintesis)",
+                stimulus: "Di Madinah, Rasulullah membuat kawasan konservasi alam (Hima). Beliau melarang pemotongan pohon di area tertentu dan melindungi satwa. Mari kita proyeksikan ke kehidupan nyata di sekitar kita. Di Desa Karyamukti, terdapat sumber air dan lahan persawahan hijau. Jika ada sekelompok orang luar yang ingin menebang habis pepohonan di sekitar desa untuk membangun pabrik berasap kotor dengan dalih modernisasi ekonomi, yang berisiko membuat sawah warga mengering dan udara menjadi berpolusi.",
+                question: "Berdasarkan prinsip 'Cinta Kelestarian Alam' (KBC) dan keteladanan Nabi dalam membuat kawasan Hima, bagaimana sikap terbaik masyarakat menyikapi rencana pembangunan pabrik tersebut?",
+                options: ["Menerima pembangunan tersebut karena pasti akan mendatangkan uang banyak secara instan tanpa memikirkan dampak jangka panjang.", "Mengevaluasi secara kritis, dan jika terbukti merusak ekosistem desa, maka menolak secara musyawarah dan damai demi mempertahankan kelestarian alam ciptaan Allah.", "Langsung melakukan tindakan kekerasan merusak alat berat pabrik sebelum mereka mulai bekerja."],
+                correct: 1
+            }
+        ];
+
+
+        /* --- UTILITY FUNCTIONS --- */
+        function getEl(id) { return document.getElementById(id); }
+        
+        function customAlert(title, message, type = 'info') {
+            const modal = getEl('customAlert');
+            const box = getEl('customAlertBox');
+            const icon = getEl('alertIcon');
+            getEl('alertTitle').innerText = title;
+            getEl('alertMessage').innerText = message;
+            
+            if(type === 'error') {
+                icon.innerHTML = '<i class="fas fa-times-circle text-rose-500"></i>';
+            } else if (type === 'success') {
+                icon.innerHTML = '<i class="fas fa-check-circle text-islamic-500"></i>';
+            } else {
+                icon.innerHTML = '<i class="fas fa-exclamation-circle text-gold-500"></i>';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeAlert() {
+            const modal = getEl('customAlert');
+            const box = getEl('customAlertBox');
+            modal.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        function openModal(id) {
+            const modal = getEl(id);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal(id) {
+            const modal = getEl(id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function goTo(screenId) {
+            document.querySelectorAll('.screen-container').forEach(el => {
+                el.classList.remove('active');
+            });
+            // Stop any playing audio when changing screens
+            if(window.currentAudio) { window.currentAudio.pause(); window.currentAudioBtn.innerHTML = '<i class="fas fa-play ml-1"></i>'; window.currentAudioBtn.classList.remove('animate-pulse'); window.currentAudio = null; }
+            
+            const target = getEl(screenId);
+            target.classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        /* --- AUDIO PLAYER LOGIC --- */
+        window.currentAudio = null;
+        window.currentAudioBtn = null;
+        
+        function toggleAudio(audioId, btnEl) {
+            const audio = getEl(audioId);
+            if(!audio) return;
+
+            // Pause if another audio is currently playing
+            if (window.currentAudio && window.currentAudio !== audio) {
+                window.currentAudio.pause();
+                if(window.currentAudioBtn) {
+                    window.currentAudioBtn.innerHTML = '<i class="fas fa-play ml-1"></i>';
+                    window.currentAudioBtn.classList.remove('animate-pulse');
+                }
+            }
+
+            if (audio.paused) {
+                audio.play();
+                btnEl.innerHTML = '<i class="fas fa-pause"></i>';
+                btnEl.classList.add('animate-pulse');
+                window.currentAudio = audio;
+                window.currentAudioBtn = btnEl;
+                
+                audio.onended = () => {
+                    btnEl.innerHTML = '<i class="fas fa-play ml-1"></i>';
+                    btnEl.classList.remove('animate-pulse');
+                    window.currentAudio = null;
+                    window.currentAudioBtn = null;
+                };
+            } else {
+                audio.pause();
+                btnEl.innerHTML = '<i class="fas fa-play ml-1"></i>';
+                btnEl.classList.remove('animate-pulse');
+                window.currentAudio = null;
+                window.currentAudioBtn = null;
+            }
+        }
+
+        /* --- LOGIC: SPLASH & START --- */
+        window.onload = () => {
+            setTimeout(() => {
+                goTo('screen-cover');
+            }, 2500); // Splash screen duration
+        };
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const name = getEl('studentName').value.trim();
+            const cls = getEl('studentClass').value;
+            
+            if (!name || !cls) {
+                customAlert('Data Belum Lengkap', 'Mohon isi Nama Lengkap dan pilih Kelas kamu ya!', 'error');
+                return;
+            }
+            
+            state.student.name = name;
+            state.student.class = cls;
+            
+            // Update UI with student data
+            getEl('displayStudentName').innerText = name;
+            getEl('displayStudentClass').innerText = cls;
+            getEl('displayInitials').innerText = name.charAt(0).toUpperCase();
+            getEl('welcomeText').innerText = `Selamat Datang, ${name.split(' ')[0]}!`;
+            
+            goTo('screen-guide');
+        }
+
+        /* --- LOGIC: GUIDE SLIDER --- */
+        let currentGuide = 1;
+        function changeGuide(dir) {
+            currentGuide += dir;
+            
+            if(currentGuide > 3) {
+                goTo('screen-menu');
+                updateMenuUI();
+                return;
+            }
+
+            // Hide all
+            for(let i=1; i<=3; i++) {
+                const slide = getEl(`guide-${i}`);
+                slide.classList.remove('opacity-100', 'translate-x-0', 'translate-x-full', '-translate-x-full');
+                if(i < currentGuide) {
+                    slide.classList.add('opacity-0', '-translate-x-full');
+                } else if (i > currentGuide) {
+                    slide.classList.add('opacity-0', 'translate-x-full');
+                } else {
+                    slide.classList.add('opacity-100', 'translate-x-0');
+                }
+            }
+
+            // Update dots & texts
+            getEl('guideCounter').innerText = `${currentGuide} / 3`;
+            const dots = getEl('guideDots').children;
+            for(let i=0; i<3; i++) {
+                dots[i].className = i+1 === currentGuide ? "w-2 h-2 rounded-full bg-islamic-600 transition-all" : "w-2 h-2 rounded-full bg-slate-300 transition-all";
+            }
+
+            getEl('btnGuidePrev').classList.toggle('invisible', currentGuide === 1);
+            getEl('btnGuideNext').innerText = currentGuide === 3 ? "Masuk Menu Utama" : "Selanjutnya";
+            
+            // Pulse effect for the final button
+            if(currentGuide === 3) getEl('btnGuideNext').classList.add('animate-pulse');
+            else getEl('btnGuideNext').classList.remove('animate-pulse');
+        }
+
+        /* --- LOGIC: MENU UTAMA --- */
+        function updateMenuUI() {
+            // Belajar Progress
+            let bProgress = (state.progress.belajar / 6) * 100;
+            getEl('prog-belajar').style.width = `${bProgress}%`;
+            
+            if(state.progress.belajar === 6 && !state.status.bermainOpen) {
+                state.status.bermainOpen = true;
+                customAlert('Hebat!', 'Kamu telah menyelesaikan semua materi belajar. Menu BERMAIN sekarang TERBUKA!', 'success');
+            }
+
+            // Bermain Progress & Unlocking
+            let bmProgress = (state.progress.bermain / 10) * 100;
+            getEl('prog-bermain').style.width = `${bmProgress}%`;
+            
+            const cardBm = getEl('card-bermain');
+            const statBm = getEl('status-bermain');
+            const iconBm = getEl('icon-bermain');
+            if(state.status.bermainOpen) {
+                cardBm.classList.remove('opacity-75', 'border-slate-300');
+                cardBm.classList.add('border-gold-500', 'hover:-translate-y-1', 'hover:shadow-xl');
+                statBm.className = "absolute top-4 right-4 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center";
+                statBm.innerHTML = '<i class="fas fa-unlock"></i>';
+                iconBm.classList.remove('bg-slate-50', 'text-slate-400');
+                iconBm.classList.add('bg-gold-50', 'text-gold-500');
+            }
+
+            if(state.progress.bermain === 10 && !state.status.berlatihOpen) {
+                state.status.berlatihOpen = true;
+                customAlert('Luar Biasa!', 'Tantangan bermain selesai! Menu BERLATIH sekarang TERBUKA!', 'success');
+            }
+
+            // Berlatih Progress & Unlocking
+            let blProgress = (state.progress.berlatih / 10) * 100;
+            getEl('prog-berlatih').style.width = `${blProgress}%`;
+
+            const cardBl = getEl('card-berlatih');
+            const statBl = getEl('status-berlatih');
+            const iconBl = getEl('icon-berlatih');
+            if(state.status.berlatihOpen) {
+                cardBl.classList.remove('opacity-75', 'border-slate-300');
+                cardBl.classList.add('border-rose-500', 'hover:-translate-y-1', 'hover:shadow-xl');
+                statBl.className = "absolute top-4 right-4 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center";
+                statBl.innerHTML = '<i class="fas fa-unlock"></i>';
+                iconBl.classList.remove('bg-slate-50', 'text-slate-400');
+                iconBl.classList.add('bg-rose-50', 'text-rose-500');
+            }
+
+            // Show report button if completed
+            if(state.status.isCompleted) {
+                getEl('btnPreviewReport').classList.remove('hidden');
+            }
+        }
+
+        function openMenu(menu) {
+            if(menu === 'belajar') {
+                state.current.belajarSlide = 0;
+                renderBelajar();
+                goTo('screen-belajar');
+            } else if (menu === 'bermain') {
+                if(!state.status.bermainOpen) {
+                    customAlert('Masih Terkunci', 'Kamu harus menyelesaikan seluruh materi di menu BELAJAR terlebih dahulu.', 'warning');
+                    return;
+                }
+                state.current.bermainIndex = state.progress.bermain >= 10 ? 0 : state.progress.bermain;
+                if(state.progress.bermain >= 10) { state.scores.bermain = 0; state.progress.bermain = 0; } // Reset if re-entering
+                renderBermain();
+                goTo('screen-bermain');
+            } else if (menu === 'berlatih') {
+                if(!state.status.berlatihOpen) {
+                    customAlert('Masih Terkunci', 'Kamu harus menyelesaikan tantangan BERMAIN terlebih dahulu.', 'warning');
+                    return;
+                }
+                state.current.berlatihIndex = 0;
+                state.scores.berlatih = 0;
+                state.berlatihAnswers = [];
+                renderBerlatih();
+                goTo('screen-berlatih');
+            }
+        }
+
+        /* --- LOGIC: BELAJAR --- */
+        let answeredBelajarQuizzes = new Array(6).fill(false);
+
+        function renderBelajar() {
+            const idx = state.current.belajarSlide;
+            const data = materiData[idx];
+            
+            // Stop playing audio when changing slides
+            if(window.currentAudio) { window.currentAudio.pause(); window.currentAudio = null; window.currentAudioBtn = null; }
+
+            getEl('belajarCounter').innerText = idx + 1;
+            getEl('belajarProgressBar').style.width = `${((idx + 1) / 6) * 100}%`;
+            
+            // Render Content
+            getEl('materiContainer').innerHTML = `
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-6 pb-4 border-b-2 border-islamic-200 leading-tight">
+                    <span class="text-islamic-600 mr-2">#${idx+1}</span> ${data.title}
+                </h2>
+                <div class="font-sans">${data.content}</div>
+            `;
+
+            // Render Quiz Pemantik
+            const q = data.quiz;
+            let optionsHTML = '';
+            q.options.forEach((opt, i) => {
+                let btnClass = answeredBelajarQuizzes[idx] 
+                    ? (i === q.correct ? 'bg-green-100 border-green-500 text-green-800' : 'bg-slate-100 border-slate-300 text-slate-400 opacity-50')
+                    : 'bg-white border-slate-300 hover:border-islamic-500 hover:bg-islamic-50 text-slate-700 cursor-pointer';
+
+                let icon = answeredBelajarQuizzes[idx] && i === q.correct ? '<i class="fas fa-check-circle text-green-600 absolute right-4"></i>' : '';
+
+                optionsHTML += `
+                    <div onclick="checkBelajarQuiz(${i}, ${q.correct})" class="relative p-4 rounded-xl border-2 transition-all duration-200 flex items-center ${btnClass} ${answeredBelajarQuizzes[idx] ? 'pointer-events-none' : ''}">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold flex items-center justify-center mr-3 shrink-0">${['A','B','C'][i]}</div>
+                        <span class="text-sm font-medium pr-8">${opt}</span>
+                        ${icon}
+                    </div>
+                `;
+            });
+
+            getEl('materiQuizContainer').innerHTML = `
+                <p class="font-medium text-slate-800 mb-3">${q.question}</p>
+                <div class="space-y-2">
+                    ${optionsHTML}
+                </div>
+            `;
+
+            // Nav Buttons
+            getEl('btnBelajarPrev').disabled = (idx === 0);
+            getEl('btnBelajarNext').disabled = !answeredBelajarQuizzes[idx];
+            getEl('btnBelajarNext').innerText = (idx === 5) ? "Selesai Belajar" : "Selanjutnya";
+            
+            // Scroll to top of content
+            getEl('screen-belajar').querySelector('.overflow-y-auto').scrollTop = 0;
+        }
+
+        function checkBelajarQuiz(selected, correct) {
+            const idx = state.current.belajarSlide;
+            if (selected === correct) {
+                answeredBelajarQuizzes[idx] = true;
+                // Update overall progress if this is the highest reached
+                if(idx + 1 > state.progress.belajar) state.progress.belajar = idx + 1;
+                renderBelajar(); // Re-render to show green correct answer and enable Next button
+            } else {
+                customAlert('Kurang Tepat', 'Coba baca materi lagi dan pilih jawaban yang paling sesuai.', 'warning');
+            }
+        }
+
+        function navigateBelajar(dir) {
+            const newIdx = state.current.belajarSlide + dir;
+            if (newIdx < 0) return;
+            if (newIdx > 5) {
+                // Selesai
+                goTo('screen-menu');
+                updateMenuUI();
+                return;
+            }
+            state.current.belajarSlide = newIdx;
+            renderBelajar();
+        }
+
+        /* --- LOGIC: BERMAIN --- */
+        let currentBermainAnswer = null;
+
+        function renderBermain() {
+            const idx = state.current.bermainIndex;
+            const data = bermainData[idx];
+            currentBermainAnswer = null;
+
+            getEl('bermainCounter').innerText = idx + 1;
+            getEl('bermainProgressBar').style.width = `${((idx + 1) / 10) * 100}%`;
+            getEl('bermainStimulus').innerHTML = `<p>${data.stimulus}</p>`;
+            getEl('bermainQuestion').innerText = `${idx + 1}. ${data.question}`;
+
+            const area = getEl('bermainInteractiveArea');
+            let html = '';
+
+            // Using Stylized MC for all to ensure mobile responsiveness without complex drag logic
+            data.options.forEach((opt, i) => {
+                html += `
+                    <label class="relative flex items-start p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition peer-checked:border-gold-500 peer-checked:bg-gold-50" onclick="selectBermainOpt(this, ${i})">
+                        <input type="radio" name="bm_opt" class="sr-only">
+                        <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-slate-300 mr-4 mt-0.5 pointer-events-none indicator shrink-0"></div>
+                        <div class="text-slate-700 text-sm md:text-base">${opt}</div>
+                    </label>
+                `;
+            });
+            area.innerHTML = html;
+
+            getEl('bermainFeedback').className = "mt-6 hidden rounded-xl p-4 text-sm font-medium";
+            getEl('btnBermainCek').classList.remove('hidden');
+            getEl('btnBermainNext').classList.add('hidden');
+            
+            getEl('screen-bermain').querySelector('.overflow-y-auto').scrollTop = 0;
+        }
+
+        function selectBermainOpt(labelEl, index) {
+            if(getEl('btnBermainCek').classList.contains('hidden')) return; // locked if checked
+            
+            document.querySelectorAll('#bermainInteractiveArea label').forEach(el => {
+                el.classList.remove('border-gold-500', 'bg-gold-50', 'shadow-md');
+                el.classList.add('border-slate-200', 'bg-white');
+                el.querySelector('.indicator').classList.remove('border-gold-500', 'bg-gold-500');
+                el.querySelector('.indicator').classList.add('border-slate-300');
+                el.querySelector('.indicator').innerHTML = '';
+            });
+
+            labelEl.classList.remove('border-slate-200', 'bg-white');
+            labelEl.classList.add('border-gold-500', 'bg-gold-50', 'shadow-md');
+            const ind = labelEl.querySelector('.indicator');
+            ind.classList.remove('border-slate-300');
+            ind.classList.add('border-gold-500', 'bg-gold-500');
+            ind.innerHTML = '<i class="fas fa-check text-white text-xs"></i>';
+            
+            currentBermainAnswer = index;
+        }
+
+        function checkBermainAnswer() {
+            if (currentBermainAnswer === null) {
+                customAlert('Pilih Jawaban', 'Silakan pilih salah satu jawaban terlebih dahulu.', 'warning');
+                return;
+            }
+
+            const idx = state.current.bermainIndex;
+            const data = bermainData[idx];
+            const isCorrect = currentBermainAnswer === data.correct;
+            const fb = getEl('bermainFeedback');
+
+            if (isCorrect) {
+                state.scores.bermain += 10; // 10 pts per correct answer (max 100)
+                fb.innerHTML = '<i class="fas fa-star text-gold-500 mr-2 text-lg"></i> <b>Luar Biasa!</b> Jawabanmu tepat sekali.';
+                fb.className = "mt-6 rounded-xl p-4 text-sm md:text-base font-medium bg-green-100 text-green-800 border border-green-200 animate-slide-up block";
+            } else {
+                fb.innerHTML = '<i class="fas fa-info-circle text-rose-500 mr-2 text-lg"></i> <b>Kurang tepat.</b> Pahami lagi konteks bacaannya ya.';
+                fb.className = "mt-6 rounded-xl p-4 text-sm md:text-base font-medium bg-rose-50 text-rose-800 border border-rose-200 animate-slide-up block";
+            }
+
+            // Lock options visually
+            document.querySelectorAll('#bermainInteractiveArea label').forEach((el, i) => {
+                if(i === data.correct) {
+                    el.classList.add('ring-2', 'ring-green-500', 'ring-offset-2');
+                } else if(i === currentBermainAnswer && !isCorrect) {
+                    el.classList.add('ring-2', 'ring-rose-400', 'ring-offset-2', 'opacity-50');
+                } else {
+                    el.classList.add('opacity-50');
+                }
+            });
+
+            getEl('btnBermainCek').classList.add('hidden');
+            getEl('btnBermainNext').classList.remove('hidden');
+            
+            if(state.progress.bermain === idx) state.progress.bermain++;
+        }
+
+        function nextBermain() {
+            state.current.bermainIndex++;
+            if (state.current.bermainIndex >= 10) {
+                goTo('screen-menu');
+                updateMenuUI();
+            } else {
+                renderBermain();
+            }
+        }
+
+        /* --- LOGIC: BERLATIH (ASESMEN) --- */
+        function renderBerlatih() {
+            const idx = state.current.berlatihIndex;
+            const data = berlatihData[idx];
+
+            getEl('berlatihCounter').innerText = idx + 1;
+            getEl('berlatihLevelBadge').innerText = data.badge;
+            getEl('berlatihPoinBadge').innerText = `Bobot: ${data.poin} Poin`;
+            
+            // Level styling
+            const badgeEl = getEl('berlatihLevelBadge');
+            badgeEl.className = "text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm";
+            if(data.level === 1) badgeEl.classList.add('bg-blue-600');
+            else if(data.level === 2) badgeEl.classList.add('bg-amber-600');
+            else badgeEl.classList.add('bg-rose-600');
+
+            getEl('berlatihStimulus').innerHTML = `<p>${data.stimulus}</p>`;
+            getEl('berlatihQuestion').innerText = `${idx + 1}. ${data.question}`;
+
+            const optionsArea = getEl('berlatihOptions');
+            let html = '';
+            
+            // Check if already answered
+            const savedAns = state.berlatihAnswers[idx];
+
+            data.options.forEach((opt, i) => {
+                const isChecked = savedAns === i ? 'checked' : '';
+                const styleClass = savedAns === i ? 'border-islamic-500 bg-islamic-50' : 'border-slate-200 bg-white';
+                html += `
+                    <label class="flex items-start p-4 rounded-xl border-2 ${styleClass} cursor-pointer hover:bg-slate-50 transition" onclick="selectBerlatihOpt(this, ${idx}, ${i})">
+                        <input type="radio" name="bl_opt_${idx}" value="${i}" ${isChecked} class="mt-1 w-4 h-4 text-islamic-600 bg-slate-100 border-slate-300 focus:ring-islamic-500 mr-4">
+                        <span class="text-slate-700 text-sm md:text-base flex-1 leading-relaxed">${opt}</span>
+                    </label>
+                `;
+            });
+            optionsArea.innerHTML = html;
+
+            // Nav logic
+            getEl('btnBerlatihPrev').classList.toggle('invisible', idx === 0);
+            
+            if (idx === 9) {
+                getEl('btnBerlatihNext').classList.add('hidden');
+                getEl('btnBerlatihSubmit').classList.remove('hidden');
+            } else {
+                getEl('btnBerlatihNext').classList.remove('hidden');
+                getEl('btnBerlatihSubmit').classList.add('hidden');
+            }
+            
+            getEl('screen-berlatih').querySelector('.overflow-y-auto').scrollTop = 0;
+        }
+
+        function selectBerlatihOpt(labelEl, qIndex, optIndex) {
+            state.berlatihAnswers[qIndex] = optIndex;
+            
+            const siblings = labelEl.parentElement.querySelectorAll('label');
+            siblings.forEach(el => {
+                el.classList.remove('border-islamic-500', 'bg-islamic-50');
+                el.classList.add('border-slate-200', 'bg-white');
+                el.querySelector('input').checked = false;
+            });
+
+            labelEl.classList.remove('border-slate-200', 'bg-white');
+            labelEl.classList.add('border-islamic-500', 'bg-islamic-50');
+            labelEl.querySelector('input').checked = true;
+        }
+
+        function navigateBerlatih(dir) {
+            // Optional: require answer before next
+            if (dir === 1 && state.berlatihAnswers[state.current.berlatihIndex] === undefined) {
+                customAlert('Belum Dijawab', 'Pilih salah satu jawaban terlebih dahulu.', 'info');
+                return;
+            }
+
+            const newIdx = state.current.berlatihIndex + dir;
+            if (newIdx >= 0 && newIdx <= 9) {
+                state.current.berlatihIndex = newIdx;
+                renderBerlatih();
+            }
+        }
+
+        function submitBerlatih() {
+            if (state.berlatihAnswers[9] === undefined) {
+                customAlert('Belum Selesai', 'Jawab soal terakhir terlebih dahulu.', 'info');
+                return;
+            }
+            // Confirm modal via custom UI (simulate confirm)
+            getEl('alertTitle').innerText = "Kumpulkan Asesmen?";
+            getEl('alertMessage').innerText = "Apakah kamu yakin ingin mengumpulkan jawaban? Setelah ini kamu akan melihat laporan belajarmu.";
+            getEl('alertIcon').innerHTML = '<i class="fas fa-question-circle text-blue-500"></i>';
+            
+            // Temporarily replace alert button action
+            const box = getEl('customAlertBox');
+            const oldBtn = box.querySelector('button');
+            const newBtnContainer = document.createElement('div');
+            newBtnContainer.className = "flex space-x-2 mt-6";
+            newBtnContainer.innerHTML = `
+                <button id="btnCancel" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-xl">Batal</button>
+                <button id="btnConfirm" class="flex-1 bg-islamic-600 text-white py-2 rounded-xl font-bold">Kumpulkan</button>
+            `;
+            oldBtn.style.display = 'none';
+            box.appendChild(newBtnContainer);
+
+            getEl('customAlert').classList.remove('hidden');
+            getEl('customAlert').classList.add('flex');
+            setTimeout(() => { getEl('customAlert').classList.remove('opacity-0'); box.classList.add('scale-100'); box.classList.remove('scale-95');}, 10);
+
+            getEl('btnCancel').onclick = () => {
+                closeAlert();
+                setTimeout(()=>{ newBtnContainer.remove(); oldBtn.style.display = 'block'; }, 300);
+            };
+
+            getEl('btnConfirm').onclick = () => {
+                closeAlert();
+                setTimeout(()=>{ newBtnContainer.remove(); oldBtn.style.display = 'block'; calculateFinalScore(); }, 300);
+            };
+        }
+
+        function promptExitBerlatih(){
+             customAlert('Perhatian', 'Jika keluar sekarang, progres jawaban Berlatih akan hilang. Lanjutkan?', 'warning');
+             // Similar pattern to above could be implemented for a real exit confirm, 
+             // but for simplicity we'll just show warning. If they hit "Mengerti", they stay.
+             // To actually exit: goTo('screen-menu')
+        }
+
+        function calculateFinalScore() {
+            let totalScore = 0;
+            let levelStats = {
+                1: { count: 0, correct: 0, pts: 0, totalPts: 0 },
+                2: { count: 0, correct: 0, pts: 0, totalPts: 0 },
+                3: { count: 0, correct: 0, pts: 0, totalPts: 0 }
+            };
+
+            berlatihData.forEach((q, idx) => {
+                const isCorrect = state.berlatihAnswers[idx] === q.correct;
+                const lvl = q.level;
+                
+                levelStats[lvl].count++;
+                levelStats[lvl].totalPts += q.poin;
+
+                if (isCorrect) {
+                    totalScore += q.poin;
+                    levelStats[lvl].correct++;
+                    levelStats[lvl].pts += q.poin;
+                }
+            });
+
+            state.scores.berlatih = totalScore;
+            state.progress.berlatih = 10;
+            state.status.isCompleted = true;
+            state.levelStats = levelStats;
+
+            generateReportData();
+            goTo('screen-report');
+            updateMenuUI();
+        }
+
+        /* --- LOGIC: REPORT & PDF --- */
+        function generateReportEarly() {
+            // Triggered from menu button
+            if(!state.status.isCompleted) return;
+            generateReportData();
+            goTo('screen-report');
+        }
+
+        function generateReportData() {
+            const d = new Date();
+            const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+
+            getEl('repName').innerText = state.student.name;
+            getEl('repClass').innerText = state.student.class;
+            getEl('repDate').innerText = dateStr;
+            getEl('repDateSign').innerText = dateStr;
+
+            getEl('repBermainScore').innerText = state.scores.bermain;
+            getEl('repBermainTuntas').innerText = "10/10";
+            
+            const finalScore = state.scores.berlatih;
+            getEl('repBerlatihScore').innerText = finalScore;
+            
+            // Predicate
+            let pred = { text: "Perlu Bimbingan", color: "text-rose-600" };
+            if(finalScore >= 90) pred = { text: "Sangat Memuaskan (A)", color: "text-islamic-700" };
+            else if(finalScore >= 75) pred = { text: "Memuaskan (B)", color: "text-blue-600" };
+            else if(finalScore >= 60) pred = { text: "Cukup (C)", color: "text-amber-600" };
+            
+            const predEl = getEl('repPredicate');
+            predEl.innerText = pred.text;
+            predEl.className = `inline-block bg-white px-3 py-1 rounded-full text-sm font-bold border border-islamic-200 shadow-sm ${pred.color}`;
+
+            // Level Table
+            let tbody = '';
+            for(let i=1; i<=3; i++) {
+                const s = state.levelStats[i];
+                let lvlName = i===1 ? "Dasar (Pemahaman)" : (i===2 ? "Sedang (Penerapan)" : "Tinggi (HOTS/Analisis)");
+                tbody += `
+                    <tr>
+                        <td class="px-6 py-4 font-medium text-slate-900">${lvlName}</td>
+                        <td class="px-6 py-4 text-center">${s.count}</td>
+                        <td class="px-6 py-4 text-center font-bold ${s.correct === s.count ? 'text-islamic-600' : 'text-slate-700'}">${s.correct}</td>
+                        <td class="px-6 py-4 text-right">${s.pts} / ${s.totalPts}</td>
+                    </tr>
+                `;
+            }
+            getEl('repLevelTable').innerHTML = tbody;
+
+            // Recommendation based on HOTS
+            const hotsStat = state.levelStats[3];
+            let rec = "";
+            if (hotsStat.correct >= 2) {
+                rec = "Luar biasa! Ananda memiliki kemampuan analisis dan penalaran (HOTS) yang sangat baik dalam mengaitkan sejarah Islam dengan realita kehidupan masa kini. Pertahankan semangat literasinya.";
+            } else if (hotsStat.correct === 1) {
+                rec = "Ananda sudah cukup baik memahami konsep dasar sejarah. Ke depannya, perbanyak latihan membaca teks analitis untuk meningkatkan kemampuan menghubungkan sebab-akibat suatu peristiwa bersejarah.";
+            } else {
+                rec = "Ananda perlu lebih banyak bimbingan dalam membaca komprehensif. Disarankan untuk sering mengulang materi sejarah dan berdiskusi dengan guru mengenai hikmah di balik peristiwa Hijrah.";
+            }
+            getEl('repRecommendation').innerText = rec;
+        }
+
+        function downloadPDF() {
+            const element = getEl('pdfDocument');
+            const opt = {
+                margin:       10,
+                filename:     `Laporan_SKI_${state.student.name.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Call html2pdf
+            html2pdf().set(opt).from(element).save().catch(err => {
+                // Fallback to window.print if CDN fails or blocked
+                window.print();
+            });
+        }
+    </script>
+</body>
+</html>
